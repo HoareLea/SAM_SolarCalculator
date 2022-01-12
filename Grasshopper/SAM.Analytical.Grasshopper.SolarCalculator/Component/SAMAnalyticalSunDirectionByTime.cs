@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace SAM.Analytical.Grasshopper.SolarCalculator
 {
-    public class SAMAnalyticalSunDirection : GH_SAMVariableOutputParameterComponent
+    public class SAMAnalyticalSunDirectionByTime : GH_SAMVariableOutputParameterComponent
     {
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.0";
+        public override string LatestComponentVersion => "1.0.1";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -29,9 +29,9 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// Initializes a new instance of the SAM_point3D class.
         /// </summary>
-        public SAMAnalyticalSunDirection()
-          : base("SAMAnalytical.SunDirection", "SAMAnalytical.SunDirection",
-              "Sun Direction for AnalyticalModel",
+        public SAMAnalyticalSunDirectionByTime()
+          : base("SAMAnalytical.SunDirectionByTime", "SAMAnalytical.SunDirectionByTime",
+              "Sun Direction by Time for AnalyticalModel",
               "SAM WIP", "Analytical")
         {
         }
