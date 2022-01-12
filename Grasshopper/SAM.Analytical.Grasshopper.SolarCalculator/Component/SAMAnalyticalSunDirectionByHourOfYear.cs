@@ -12,7 +12,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
         /// </summary>
-        public override Guid ComponentGuid => new Guid("f24a820a-a844-4b2a-a581-091e220dad17");
+        public override Guid ComponentGuid => new Guid("0f49866b-0f29-4ade-b1b7-91ea916b537e");
 
         /// <summary>
         /// The latest version of this component
