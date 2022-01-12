@@ -32,7 +32,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         public SAMAnalyticalSunDirectionByTime()
           : base("SAMAnalytical.SunDirectionByTime", "SAMAnalytical.SunDirectionByTime",
               "Sun Direction by Time for AnalyticalModel",
-              "SAM WIP", "Analytical")
+              "SAM WIP", "Solar")
         {
         }
 
