@@ -6,7 +6,7 @@ namespace SAM.Weather.SolarCalculator
 {
     public static partial class Query
     {
-        public static Vector3D SunDirection(this WeatherData weatherData, int hourOfYear, int year = -1)
+        public static Vector3D SunDirection(this WeatherData weatherData, int hourOfYear, int year = -1, bool includeNight = false)
         {
             if(weatherData == null)
             {
@@ -27,7 +27,7 @@ namespace SAM.Weather.SolarCalculator
 
             DateTime dateTime = new DateTime(year_Temp, 1, 1).AddHours(hourOfYear - 1);
 
-            return Geometry.SolarCalculator.Query.SunDirection( weatherData.Location, dateTime);
+            return Geometry.SolarCalculator.Query.SunDirection( weatherData.Location, dateTime, includeNight);
         }
     }
 }

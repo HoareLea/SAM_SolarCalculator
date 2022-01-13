@@ -23,16 +23,16 @@ namespace SAM.Geometry.SolarCalculator
             }
 
             double solarElevation = System.Convert.ToDouble(angle_SolarElevation.Radians);
-            double solarAzimuth = System.Convert.ToDouble(angle_SolarAzimuth.Radians) + (System.Math.PI / 2);
+            double solarAzimuth = System.Convert.ToDouble(angle_SolarAzimuth.Radians) + (Math.PI / 2);
 
-            double x = System.Math.Cos(solarElevation) * System.Math.Cos(solarAzimuth);
-            double y = System.Math.Cos(solarElevation + System.Math.PI) * System.Math.Sin(solarAzimuth);
-            double z = System.Math.Sin(solarElevation + System.Math.PI);
+            double x = Math.Cos(solarElevation) * Math.Cos(solarAzimuth);
+            double y = Math.Cos(solarElevation + Math.PI) * Math.Sin(solarAzimuth);
+            double z = Math.Sin(solarElevation + Math.PI);
 
             return new Vector3D(x, y, z);
         }
 
-        public static Vector3D SunDirection(this Location location, DateTime dateTime)
+        public static Vector3D SunDirection(this Location location, DateTime dateTime, bool includeNight = false)
         {
             if(location == null || dateTime == DateTime.MinValue || dateTime == DateTime.MaxValue)
             {
@@ -45,14 +45,19 @@ namespace SAM.Geometry.SolarCalculator
             int timeZoneOffset = 0;
             if (!location.TryGetValue(LocationParameter.TimeZone, out string timeZoneString))
             {
-                Core.UTC uTC = Core.Query.UTC(timeZoneString);
-                if (uTC != Core.UTC.Undefined)
+                UTC uTC = Core.Query.UTC(timeZoneString);
+                if (uTC != UTC.Undefined)
                 {
                     timeZoneOffset = System.Convert.ToInt32(Core.Query.Double(uTC));
                 }
             }
 
             SolarTimes solarTimes = new SolarTimes(dateTime, timeZoneOffset, angle_Latitude, angle_Longitude);
+            if (!includeNight && (dateTime < solarTimes.Sunrise || dateTime > solarTimes.Sunset))
+            {
+                return null;
+            }
+
             return SunDirection(solarTimes);
         }
     }
