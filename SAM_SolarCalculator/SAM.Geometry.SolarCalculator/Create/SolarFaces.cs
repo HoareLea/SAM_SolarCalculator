@@ -24,7 +24,7 @@ namespace SAM.Geometry.SolarCalculator
                 Polygon3D polygon3D_Shade = plane.Convert(polygon2D_SolarFace);
 
                 polygon3D_Shade = plane_SolarFace.Project(polygon3D_Shade, vector3D, tolerance);
-                if (polygon3D_Shade == null)
+                if (polygon3D_Shade == null || !polygon3D_Shade.IsValid())
                 {
                     continue;
                 }
