@@ -71,6 +71,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Component\SAMGeometrySunAnalysisBySunDirection.cs" />
     <Compile Include="Component\SAMGeometryShadingBySunDirection.cs" />
     <Compile Include="Kernel\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,6 +80,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Query\TryGetSolarFaces.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SAM_Small.png" />
@@ -99,7 +101,6 @@
     <Folder Include="Classes\" />
     <Folder Include="Convert\" />
     <Folder Include="Interfaces\" />
-    <Folder Include="Query\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SAM_Names.png" />

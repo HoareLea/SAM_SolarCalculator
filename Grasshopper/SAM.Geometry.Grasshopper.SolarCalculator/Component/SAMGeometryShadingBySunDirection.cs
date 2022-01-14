@@ -91,30 +91,13 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            List<SolarFace> solarFaces = new List<SolarFace>();
-            foreach (GH_ObjectWrapper objectWrapper in objectWrappers)
+            if (!Query.TryGetSolarFaces(objectWrappers, out List<SolarFace> solarFaces) || solarFaces == null || solarFaces.Count == 0)
             {
-                if (!Query.TryGetSAMGeometries(objectWrapper, out List<ISAMGeometry> sAMGeometries) || sAMGeometries == null)
-                {
-                    continue;
-                }
-
-                foreach(ISAMGeometry sAMGeometry in sAMGeometries)
-                {
-                    if(sAMGeometry is Spatial.Face3D)
-                    {
-                        solarFaces.Add(new SolarFace(Guid.NewGuid(), sAMGeometry as Spatial.Face3D));
-                    }
-                    else if(sAMGeometry is Spatial.IFace3DObject)
-                    {
-                        Core.SAMObject sAMObject = sAMGeometry as Core.SAMObject;
-
-                        solarFaces.Add(new SolarFace(sAMObject == null ? Guid.NewGuid() : sAMObject.Guid, ((Spatial.IFace3DObject)sAMGeometry).Face3D));
-                    }
-                }
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
+                return;
             }
 
-            List<SolarFace> solarFaces_Result = Geometry.SolarCalculator.Query.Shadings(solarFaces, Rhino.Convert.ToSAM(vector3d));
+            List<SolarFace> solarFaces_Result = Geometry.SolarCalculator.Query.ShadedSolarFaces(solarFaces, Rhino.Convert.ToSAM(vector3d));
 
             index = Params.IndexOfOutputParam("shadings");
             if (index != -1)

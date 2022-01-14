@@ -52,13 +52,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\SolarFace.cs" />
+    <Compile Include="Create\SolarFaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Query\Shadings.cs" />
+    <Compile Include="Query\ExposedToSunSolarFaces.cs" />
+    <Compile Include="Query\SunSolarFaces.cs" />
+    <Compile Include="Query\ShadedSolarFaces.cs" />
     <Compile Include="Query\SunDirection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Convert\" />
-    <Folder Include="Create\" />
     <Folder Include="Enums\" />
     <Folder Include="Interfaces\" />
     <Folder Include="Modify\" />
