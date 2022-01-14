@@ -3,6 +3,7 @@ using System;
 using SAM.Core;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SAM.Geometry.SolarCalculator
 {
@@ -109,14 +110,17 @@ namespace SAM.Geometry.SolarCalculator
 
             Vector3D vector3D_Ray =  2 * vector3D;
 
-            List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_Shaded = new List<Tuple<Planar.Polygon2D, List<SolarFace>>>();
-            List<Tuple<Planar.Polygon2D, SolarFace>> tuples_ExposedToSun = new List<Tuple<Planar.Polygon2D, SolarFace>>();
-            foreach (Planar.Polygon2D polygon2D in polygon2Ds)
+            List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_Shaded = Enumerable.Repeat<Tuple<Planar.Polygon2D, List<SolarFace>>>(null, polygon2Ds.Count).ToList();
+            List<Tuple<Planar.Polygon2D, SolarFace>> tuples_ExposedToSun = Enumerable.Repeat<Tuple<Planar.Polygon2D, SolarFace>>(null, polygon2Ds.Count).ToList();
+
+            Parallel.For(0, polygon2Ds.Count, (int i) =>
             {
+                Planar.Polygon2D polygon2D = polygon2Ds[i];
+
                 Planar.Point2D point2D = polygon2D?.GetInternalPoint2D(tolerance_Distance);
-                if(point2D == null)
+                if (point2D == null)
                 {
-                    continue;
+                    return;
                 }
 
                 Point3D point3D_Start = plane.Convert(point2D);
@@ -127,60 +131,88 @@ namespace SAM.Geometry.SolarCalculator
                 List<SolarFace> solarFaces_Polygon2D = solarFaces_Filtered.FindAll(x => x.GetBoundingBox().InRange(segment3D, tolerance_Distance));
 
                 Dictionary<SolarFace, Point3D> dictionary_Intersection = Spatial.Query.IntersectionDictionary(segment3D, solarFaces_Polygon2D, true, tolerance_Distance);
-                if(dictionary_Intersection == null || dictionary_Intersection.Count == 0)
+                if (dictionary_Intersection == null || dictionary_Intersection.Count == 0)
                 {
-                    continue;
+                    return;
                 }
 
                 List<SolarFace> solarFaces_Temp = new List<SolarFace>(dictionary_Intersection.Keys);
 
-                if(exposedToSun)
+                if (exposedToSun)
                 {
                     tuples_ExposedToSun.Add(new Tuple<Planar.Polygon2D, SolarFace>(polygon2D, solarFaces_Temp[0]));
                 }
 
                 if (!shaded || dictionary_Intersection.Count < 2)
                 {
-                    continue;
+                    return;
                 }
 
                 solarFaces_Temp.RemoveAt(0);
 
                 tuples_Shaded.Add(new Tuple<Planar.Polygon2D, List<SolarFace>>(polygon2D, solarFaces_Temp));
-            }
+            });
 
             if(tuples_Shaded != null || tuples_Shaded.Count != 0)
             {
-                foreach (SolarFace solarFace in solarFaces_Filtered)
+                List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
+
+                Parallel.For(0, solarFacesList.Count, (int i) =>
                 {
+                    SolarFace solarFace = solarFaces_Filtered[i];
+
                     List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_SolarFace = tuples_Shaded.FindAll(x => x.Item2.Contains(solarFace));
                     if (tuples_SolarFace == null || tuples_SolarFace.Count == 0)
                     {
-                        continue;
+                        return;
                     }
 
                     List<SolarFace> solarFaces_Temp = Create.SolarFaces(solarFace, vector3D, tuples_SolarFace.ConvertAll(x => x.Item1), plane, tolerance_Distance);
-                    if(solarFaces_Temp == null || solarFaces_Temp.Count == 0)
+                    if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
+                    {
+                        return;
+                    }
+
+                    solarFacesList.Add(solarFaces_Temp);
+                });
+
+                foreach (List<SolarFace> solarFaces_Temp in solarFacesList)
+                {
+                    if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
                     {
                         continue;
                     }
 
-                    solarFaces_Shaded.AddRange(solarFaces_Temp);
+                    solarFaces_ExposedToSun.AddRange(solarFaces_Temp);
                 }
             }
 
             if (tuples_ExposedToSun != null || tuples_ExposedToSun.Count != 0)
             {
-                foreach (SolarFace solarFace in solarFaces_Filtered)
+                List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
+                
+                Parallel.For(0, solarFacesList.Count, (int i) => 
                 {
+                    SolarFace solarFace = solarFaces_Filtered[i];
+
                     List<Tuple<Planar.Polygon2D, SolarFace>> tuples_SolarFace = tuples_ExposedToSun.FindAll(x => x.Item2 == solarFace);
-                    if(tuples_SolarFace == null || tuples_SolarFace.Count == 0)
+                    if (tuples_SolarFace == null || tuples_SolarFace.Count == 0)
                     {
-                        continue;
+                        return;
                     }
 
                     List<SolarFace> solarFaces_Temp = Create.SolarFaces(solarFace, vector3D, tuples_SolarFace.ConvertAll(x => x.Item1), plane, tolerance_Distance);
                     if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
+                    {
+                        return;
+                    }
+
+                    solarFacesList.Add(solarFaces_Temp);
+                });
+
+                foreach(List<SolarFace> solarFaces_Temp in solarFacesList)
+                {
+                    if(solarFaces_Temp == null || solarFaces_Temp.Count == 0)
                     {
                         continue;
                     }
