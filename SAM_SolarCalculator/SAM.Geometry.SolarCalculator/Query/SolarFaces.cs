@@ -121,7 +121,8 @@ namespace SAM.Geometry.SolarCalculator
                 Planar.Point2D point2D = polygon2D?.GetInternalPoint2D(tolerance_Distance);
                 if (point2D == null)
                 {
-                    return;
+                    //return;
+                    continue;
                 }
 
                 Point3D point3D_Start = plane.Convert(point2D);
@@ -135,7 +136,8 @@ namespace SAM.Geometry.SolarCalculator
                 Dictionary<SolarFace, Point3D> dictionary_Intersection = Spatial.Query.IntersectionDictionary(segment3D, solarFaces_Polygon2D, true, tolerance_Distance);
                 if (dictionary_Intersection == null || dictionary_Intersection.Count == 0)
                 {
-                    return;
+                    //return;
+                    continue;
                 }
 
                 List<SolarFace> solarFaces_Temp = new List<SolarFace>(dictionary_Intersection.Keys);
@@ -147,7 +149,8 @@ namespace SAM.Geometry.SolarCalculator
 
                 if (!shaded || dictionary_Intersection.Count < 2)
                 {
-                    return;
+                    //return;
+                    continue;
                 }
 
                 solarFaces_Temp.RemoveAt(0);
@@ -171,13 +174,15 @@ namespace SAM.Geometry.SolarCalculator
                     List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_SolarFace = tuples_Shaded.FindAll(x => x.Item2.Contains(solarFace));
                     if (tuples_SolarFace == null || tuples_SolarFace.Count == 0)
                     {
-                        return;
+                        //return;
+                        continue;
                     }
 
                     List<SolarFace> solarFaces_Temp = Create.SolarFaces(solarFace, vector3D, tuples_SolarFace.ConvertAll(x => x.Item1), plane, tolerance_Distance);
                     if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
                     {
-                        return;
+                        //return;
+                        continue;
                     }
 
                     solarFacesList.Add(solarFaces_Temp);
@@ -206,13 +211,15 @@ namespace SAM.Geometry.SolarCalculator
                     List<Tuple<Planar.Polygon2D, SolarFace>> tuples_SolarFace = tuples_ExposedToSun.FindAll(x => x.Item2 == solarFace);
                     if (tuples_SolarFace == null || tuples_SolarFace.Count == 0)
                     {
-                        return;
+                        //return;
+                        continue;
                     }
 
                     List<SolarFace> solarFaces_Temp = Create.SolarFaces(solarFace, vector3D, tuples_SolarFace.ConvertAll(x => x.Item1), plane, tolerance_Distance);
                     if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
                     {
-                        return;
+                        //return;
+                        continue;
                     }
 
                     solarFacesList.Add(solarFaces_Temp);
