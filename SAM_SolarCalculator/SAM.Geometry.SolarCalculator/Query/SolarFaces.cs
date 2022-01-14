@@ -166,8 +166,8 @@ namespace SAM.Geometry.SolarCalculator
             {
                 List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
 
-                //Parallel.For(0, solarFacesList.Count, (int i) =>
-                for (int i = 0; i < solarFaces_Filtered.Count; i++)
+                Parallel.For(0, solarFacesList.Count, (int i) =>
+                //for (int i = 0; i < solarFaces_Filtered.Count; i++)
                 {
                     SolarFace solarFace = solarFaces_Filtered[i];
 
@@ -186,7 +186,7 @@ namespace SAM.Geometry.SolarCalculator
                     }
 
                     solarFacesList.Add(solarFaces_Temp);
-                };//);
+                });
 
                 foreach (List<SolarFace> solarFaces_Temp in solarFacesList)
                 {
