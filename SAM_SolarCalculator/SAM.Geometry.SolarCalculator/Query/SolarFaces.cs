@@ -113,7 +113,8 @@ namespace SAM.Geometry.SolarCalculator
             List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_Shaded = Enumerable.Repeat<Tuple<Planar.Polygon2D, List<SolarFace>>>(null, polygon2Ds.Count).ToList();
             List<Tuple<Planar.Polygon2D, SolarFace>> tuples_ExposedToSun = Enumerable.Repeat<Tuple<Planar.Polygon2D, SolarFace>>(null, polygon2Ds.Count).ToList();
 
-            Parallel.For(0, polygon2Ds.Count, (int i) =>
+            //Parallel.For(0, polygon2Ds.Count, (int i) =>
+            for(int i =0; i < polygon2Ds.Count; i++)
             {
                 Planar.Polygon2D polygon2D = polygon2Ds[i];
 
@@ -127,8 +128,9 @@ namespace SAM.Geometry.SolarCalculator
                 Point3D point3D_End = point3D_Start.GetMoved(vector3D_Ray) as Point3D;
 
                 Segment3D segment3D = new Segment3D(point3D_Start, point3D_End);
+                BoundingBox3D boundingBox3D_Segment3D = segment3D.GetBoundingBox();
 
-                List<SolarFace> solarFaces_Polygon2D = solarFaces_Filtered.FindAll(x => x.GetBoundingBox().InRange(segment3D, tolerance_Distance));
+                List<SolarFace> solarFaces_Polygon2D = solarFaces_Filtered.FindAll(x => x.GetBoundingBox().InRange(boundingBox3D_Segment3D, tolerance_Distance) && x.GetBoundingBox().InRange(segment3D, tolerance_Distance));
 
                 Dictionary<SolarFace, Point3D> dictionary_Intersection = Spatial.Query.IntersectionDictionary(segment3D, solarFaces_Polygon2D, true, tolerance_Distance);
                 if (dictionary_Intersection == null || dictionary_Intersection.Count == 0)
@@ -151,7 +153,7 @@ namespace SAM.Geometry.SolarCalculator
                 solarFaces_Temp.RemoveAt(0);
 
                 tuples_Shaded[i] = new Tuple<Planar.Polygon2D, List<SolarFace>>(polygon2D, solarFaces_Temp);
-            });
+            };//);
 
             tuples_ExposedToSun.RemoveAll(x => x == null);
             tuples_Shaded.RemoveAll(x => x == null);
@@ -161,7 +163,8 @@ namespace SAM.Geometry.SolarCalculator
             {
                 List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
 
-                Parallel.For(0, solarFacesList.Count, (int i) =>
+                //Parallel.For(0, solarFacesList.Count, (int i) =>
+                for (int i = 0; i < polygon2Ds.Count; i++)
                 {
                     SolarFace solarFace = solarFaces_Filtered[i];
 
@@ -178,7 +181,7 @@ namespace SAM.Geometry.SolarCalculator
                     }
 
                     solarFacesList.Add(solarFaces_Temp);
-                });
+                };//);
 
                 foreach (List<SolarFace> solarFaces_Temp in solarFacesList)
                 {
@@ -194,8 +197,9 @@ namespace SAM.Geometry.SolarCalculator
             if (tuples_ExposedToSun != null || tuples_ExposedToSun.Count != 0)
             {
                 List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
-                
-                Parallel.For(0, solarFacesList.Count, (int i) => 
+
+                //Parallel.For(0, solarFacesList.Count, (int i) => 
+                for (int i = 0; i < polygon2Ds.Count; i++)
                 {
                     SolarFace solarFace = solarFaces_Filtered[i];
 
@@ -212,7 +216,7 @@ namespace SAM.Geometry.SolarCalculator
                     }
 
                     solarFacesList.Add(solarFaces_Temp);
-                });
+                };//);
 
                 foreach(List<SolarFace> solarFaces_Temp in solarFacesList)
                 {
