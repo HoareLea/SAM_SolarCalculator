@@ -156,6 +156,7 @@ namespace SAM.Geometry.SolarCalculator
             tuples_ExposedToSun.RemoveAll(x => x == null);
             tuples_Shaded.RemoveAll(x => x == null);
 
+
             if (tuples_Shaded != null || tuples_Shaded.Count != 0)
             {
                 List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
@@ -186,7 +187,7 @@ namespace SAM.Geometry.SolarCalculator
                         continue;
                     }
 
-                    solarFaces_ExposedToSun.AddRange(solarFaces_Temp);
+                    solarFaces_Shaded.AddRange(solarFaces_Temp);
                 }
             }
 
