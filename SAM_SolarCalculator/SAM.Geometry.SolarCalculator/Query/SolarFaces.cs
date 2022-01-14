@@ -9,7 +9,7 @@ namespace SAM.Geometry.SolarCalculator
 {
     public static partial class Query
     {
-        public static void SunSolarFaces(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
+        public static void SolarFaces(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
         {
             solarFaces_Shaded = null;
             solarFaces_ExposedToSun = null;
@@ -140,7 +140,7 @@ namespace SAM.Geometry.SolarCalculator
 
                 if (exposedToSun)
                 {
-                    tuples_ExposedToSun.Add(new Tuple<Planar.Polygon2D, SolarFace>(polygon2D, solarFaces_Temp[0]));
+                    tuples_ExposedToSun[i] = new Tuple<Planar.Polygon2D, SolarFace>(polygon2D, solarFaces_Temp[0]);
                 }
 
                 if (!shaded || dictionary_Intersection.Count < 2)
@@ -150,10 +150,13 @@ namespace SAM.Geometry.SolarCalculator
 
                 solarFaces_Temp.RemoveAt(0);
 
-                tuples_Shaded.Add(new Tuple<Planar.Polygon2D, List<SolarFace>>(polygon2D, solarFaces_Temp));
+                tuples_Shaded[i] = new Tuple<Planar.Polygon2D, List<SolarFace>>(polygon2D, solarFaces_Temp);
             });
 
-            if(tuples_Shaded != null || tuples_Shaded.Count != 0)
+            tuples_ExposedToSun.RemoveAll(x => x == null);
+            tuples_Shaded.RemoveAll(x => x == null);
+
+            if (tuples_Shaded != null || tuples_Shaded.Count != 0)
             {
                 List<List<SolarFace>> solarFacesList = Enumerable.Repeat<List<SolarFace>>(null, solarFaces_Filtered.Count).ToList();
 

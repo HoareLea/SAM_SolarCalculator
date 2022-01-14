@@ -139,7 +139,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            Geometry.SolarCalculator.Query.SunSolarFaces(solarFaces, Rhino.Convert.ToSAM(vector3d), out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, shaded, exposedToSun);
+            Geometry.SolarCalculator.Query.SolarFaces(solarFaces, Rhino.Convert.ToSAM(vector3d), out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, shaded, exposedToSun);
 
             index = Params.IndexOfOutputParam("shaded");
             if (index != -1)
