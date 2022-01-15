@@ -57,6 +57,7 @@
     <Compile Include="Query\ExposedToSunSolarFaces.cs" />
     <Compile Include="Query\SolarFaces.cs" />
     <Compile Include="Query\ShadedSolarFaces.cs" />
+    <Compile Include="Query\DistantPoint3D.cs" />
     <Compile Include="Query\SunDirection.cs" />
   </ItemGroup>
   <ItemGroup>
