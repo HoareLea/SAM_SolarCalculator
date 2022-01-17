@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
+using SAM.Core.SolarCalculator;
 using SAM.Geometry.Spatial;
 using System;
 
 namespace SAM.Geometry.SolarCalculator
 {
-    public class SolarFace : Core.IJSAMObject, IFace3DObject 
+    public class SolarFace : Core.IJSAMObject, IFace3DObject, ISolarObject
     {
         private Guid guid;
         private BoundingBox3D boundingBox3D;

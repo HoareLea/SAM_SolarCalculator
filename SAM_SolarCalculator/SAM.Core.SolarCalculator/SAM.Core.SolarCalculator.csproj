@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\ISolarObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +52,6 @@
     <Folder Include="Convert\" />
     <Folder Include="Create\" />
     <Folder Include="Enums\" />
-    <Folder Include="Interfaces\" />
     <Folder Include="Modify\" />
     <Folder Include="Query\" />
   </ItemGroup>
