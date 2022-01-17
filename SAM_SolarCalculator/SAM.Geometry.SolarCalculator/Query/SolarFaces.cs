@@ -162,48 +162,10 @@ namespace SAM.Geometry.SolarCalculator
                 return;
             }
 
-            Vector3D vector3D_Ray =  2 * vector3D;
-
             List<Tuple<Planar.Polygon2D, List<SolarFace>>> tuples_Shaded = Enumerable.Repeat<Tuple<Planar.Polygon2D, List<SolarFace>>>(null, polygon2Ds.Count).ToList();
             List<Tuple<Planar.Polygon2D, SolarFace>> tuples_ExposedToSun = Enumerable.Repeat<Tuple<Planar.Polygon2D, SolarFace>>(null, polygon2Ds.Count).ToList();
 
-            //Parallel.For(0, polygon2Ds.Count, (int i) =>
-            ////for(int i =0; i < polygon2Ds.Count; i++)
-            //{
-            //    Planar.Polygon2D polygon2D = polygon2Ds[i];
-
-            //    Planar.Point2D point2D = polygon2D?.GetInternalPoint2D(tolerance_Distance);
-            //    if (point2D == null)
-            //    {
-            //        return;
-            //        //continue;
-            //    }
-
-            //    Point3D point3D_Temp = plane.Convert(point2D);
-
-            //    List<SolarFace> solarFaces_Temp = null;
-            //    if(shaded)
-            //    {
-            //        solarFaces_Temp = solarFaces_Filtered.FindAll(x => Spatial.Query.Intersect(x, point3D_Temp, vector3D, tolerance_Distance));
-            //        if(solarFaces_Temp != null && solarFaces_Temp.Count > 1)
-            //        {
-            //            tuples_Shaded[i] = new Tuple<Planar.Polygon2D, List<SolarFace>>(polygon2D, new List<SolarFace>());
-            //            for (int j = 1; j < solarFaces_Temp.Count; j++)
-            //            {
-            //                tuples_Shaded[i].Item2.Add(solarFaces_Temp[j]);
-            //            }
-            //        }
-            //    }
-
-            //    if(exposedToSun)
-            //    {
-            //        SolarFace solarFace = solarFaces_Temp != null ? solarFaces_Temp.FirstOrDefault() : solarFaces_Filtered.Find(x => Spatial.Query.Intersect(x, point3D_Temp, vector3D, tolerance_Distance));
-            //        if(solarFace != null)
-            //        {
-            //            tuples_ExposedToSun[i] = new Tuple<Planar.Polygon2D, SolarFace>(polygon2D, solarFace);
-            //        }
-            //    }
-            //});
+            Vector3D vector3D_Ray = 2 * vector3D;
 
             Parallel.For(0, polygon2Ds.Count, (int i) =>
             //for(int i =0; i < polygon2Ds.Count; i++)
