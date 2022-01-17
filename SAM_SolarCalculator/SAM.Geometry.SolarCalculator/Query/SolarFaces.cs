@@ -19,6 +19,209 @@ namespace SAM.Geometry.SolarCalculator
                 return;
             }
 
+            if (exposedToSun)
+            {
+                solarFaces_ExposedToSun = new List<SolarFace>();
+            }
+
+            if (shaded)
+            {
+                solarFaces_Shaded = new List<SolarFace>();
+            }
+
+            if (solarFaces.Count() < 2)
+            {
+                SolarFace solarFace = solarFaces.ElementAt(0);
+                if (solarFace != null && solarFaces_ExposedToSun != null)
+                {
+                    solarFaces_ExposedToSun.Add(new SolarFace(solarFace));
+                }
+
+                return;
+            }
+
+            BoundingBox3D boundingBox3D = Spatial.Create.BoundingBox3D(solarFaces);
+            if (boundingBox3D == null || !boundingBox3D.IsValid())
+            {
+                return;
+            }
+
+            Vector3D vector3D = new Vector3D(sunDirection).Unit * boundingBox3D.Min.Distance(boundingBox3D.Max);
+            Point3D point3D = boundingBox3D.GetCentroid().GetMoved(vector3D.GetNegated()) as Point3D;
+
+            Line3D line3D = new Line3D(point3D, vector3D);
+            Plane plane = new Plane(point3D, vector3D.Unit);
+
+            Vector3D vector3D_Ray = 2 * vector3D;
+
+            List<Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D>> tuples = new List<Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D>>();
+            foreach(SolarFace solarFace in solarFaces)
+            {
+                Face3D face3D = solarFace?.Face3D;
+                if (face3D == null)
+                {
+                    continue;
+                }
+
+                Face3D face3D_Project = plane.Project(face3D, vector3D, tolerance_Distance);
+                if (face3D_Project == null || !face3D_Project.IsValid())
+                {
+                    continue;
+                }
+
+                Planar.Face2D face2D = plane.Convert(face3D_Project);
+                if (face2D == null || face2D.GetArea() < tolerance_Area)
+                {
+                    continue;
+                }
+
+                tuples.Add(new Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D>(solarFace, face2D.GetBoundingBox(), face2D));
+            }
+
+            List<Tuple<SolarFace, List<Planar.Polygon2D>>> tuples_Shaded = Enumerable.Repeat<Tuple<SolarFace, List< Planar.Polygon2D >>>(null, tuples.Count).ToList();
+            List<Tuple<SolarFace, List<Planar.Polygon2D>>> tuples_ExposedToSun = Enumerable.Repeat<Tuple<SolarFace, List<Planar.Polygon2D>>>(null, tuples.Count).ToList();
+
+            Parallel.For(0, tuples.Count, (int i) =>
+            //for (int i =0; i < tuples.Count; i++)
+            {
+                Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D> tuple = tuples[i];
+
+                List<Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D>> tuples_Temp = tuples.FindAll(x => x.Item2.InRange(tuple.Item2, tolerance_Distance));
+
+                List<Planar.Segment2D> segment2Ds = new List<Planar.Segment2D>();
+                foreach(Tuple<SolarFace, Planar.BoundingBox2D, Planar.Face2D> tuple_Temp in tuples_Temp)
+                {
+                    Planar.Face2D face2D = tuple_Temp.Item3;
+
+                    Planar.ISegmentable2D segmentable2D = face2D.ExternalEdge2D as Planar.ISegmentable2D;
+                    if (segmentable2D != null)
+                    {
+                        List<Planar.Segment2D> segment2Ds_Temp = segmentable2D.GetSegments();
+                        if (segment2Ds_Temp != null)
+                        {
+                            segment2Ds.AddRange(segment2Ds_Temp);
+                        }
+                    }
+
+                    List<Planar.IClosed2D> closed2Ds = face2D.InternalEdge2Ds;
+                    if (closed2Ds != null)
+                    {
+                        foreach (Planar.IClosed2D closed2D in closed2Ds)
+                        {
+                            List<Planar.Segment2D> segment2Ds_Temp = (closed2D as Planar.ISegmentable2D)?.GetSegments();
+                            if (segment2Ds_Temp != null)
+                            {
+                                segment2Ds.AddRange(segment2Ds_Temp);
+                            }
+                        }
+                    }
+                }
+
+                segment2Ds = Planar.Query.Split(segment2Ds, tolerance_Distance);
+
+                segment2Ds = Planar.Query.Snap(segment2Ds, true, tolerance_Snap);
+
+                List<Planar.Polygon2D> polygon2Ds = Planar.Create.Polygon2Ds(segment2Ds, tolerance_Distance);
+                if (polygon2Ds == null)
+                {
+                    return;
+                }
+
+                foreach(Planar.Polygon2D polygon2D in polygon2Ds)
+                {
+                    Planar.Point2D point2D = polygon2D?.GetInternalPoint2D(tolerance_Distance);
+                    if (point2D == null)
+                    {
+                        continue;
+                    }
+
+                    if(!tuple.Item2.InRange(point2D, tolerance_Distance) || !tuple.Item3.Inside(point2D, tolerance_Distance))
+                    {
+                        continue;
+                    }
+
+                    Point3D point3D_Start = plane.Convert(point2D);
+                    Point3D point3D_End = point3D_Start.GetMoved(vector3D_Ray) as Point3D;
+
+                    Segment3D segment3D = new Segment3D(point3D_Start, point3D_End);
+                    BoundingBox3D boundingBox3D_Segment3D = segment3D.GetBoundingBox();
+
+                    Dictionary<SolarFace, Point3D> dictionary_Intersection = Spatial.Query.IntersectionDictionary(segment3D, tuples_Temp.ConvertAll(x => x.Item1), true, tolerance_Distance);
+                    if (dictionary_Intersection == null || dictionary_Intersection.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    List<Tuple<SolarFace, List<Planar.Polygon2D>>> tuples_Result = null;
+                    if(dictionary_Intersection.Keys.FirstOrDefault() == tuple.Item1 && exposedToSun)
+                    {
+                        tuples_Result = tuples_ExposedToSun;
+                    }
+                    else if(dictionary_Intersection.Keys.FirstOrDefault() != tuple.Item1 && shaded)
+                    {
+                        tuples_Result = tuples_Shaded;
+                    }
+
+                    if(tuples_Result == null)
+                    {
+                        continue;
+                    }
+
+                    if(tuples_Result[i] == null)
+                    {
+                        tuples_Result[i] = new Tuple<SolarFace, List<Planar.Polygon2D>>(tuple.Item1, new List<Planar.Polygon2D>());
+                    }
+
+                    tuples_Result[i].Item2.Add(polygon2D);
+                }
+
+            });
+
+            tuples_Shaded.RemoveAll(x => x == null);
+            tuples_ExposedToSun.RemoveAll(x => x == null);
+
+            if(tuples_Shaded != null && tuples_Shaded.Count != 0)
+            {
+                for (int i = 0; i < tuples_Shaded.Count; i++)
+                {
+                    List<SolarFace> solarFaces_Temp = Create.SolarFaces(tuples_Shaded[i].Item1, vector3D, tuples_Shaded[i].Item2, plane, tolerance_Distance);
+                    if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    solarFaces_Shaded.AddRange(solarFaces_Temp);
+                }
+            }
+
+            if (tuples_ExposedToSun != null && tuples_ExposedToSun.Count != 0)
+            {
+                for (int i = 0; i < tuples_ExposedToSun.Count; i++)
+                {
+
+                    List<SolarFace> solarFaces_Temp = Create.SolarFaces(tuples_ExposedToSun[i].Item1, vector3D, tuples_ExposedToSun[i].Item2, plane, tolerance_Distance);
+                    if (solarFaces_Temp == null || solarFaces_Temp.Count == 0)
+                    {
+                        //return;
+                        continue;
+                    }
+
+                    solarFaces_ExposedToSun.AddRange(solarFaces_Temp);
+                }
+            }
+
+        }
+
+        public static void SolarFaces_Obsolete1(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
+        {
+            solarFaces_Shaded = null;
+            solarFaces_ExposedToSun = null;
+
+            if (solarFaces == null || sunDirection == null || !sunDirection.IsValid())
+            {
+                return;
+            }
+
             if(exposedToSun)
             {
                 solarFaces_ExposedToSun = new List<SolarFace>();
@@ -294,7 +497,7 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public static void SolarFaces_Obsolete(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
+        public static void SolarFaces_Obsolete2(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
         {
             solarFaces_Shaded = null;
             solarFaces_ExposedToSun = null;
