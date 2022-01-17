@@ -50,6 +50,8 @@ namespace SAM.Geometry.SolarCalculator
             Point3D point3D = boundingBox3D.GetCentroid().GetMoved(vector3D.GetNegated()) as Point3D;
 
             Line3D line3D = new Line3D(point3D, vector3D);
+            Plane plane = new Plane(point3D, vector3D.Unit);
+
 
             List<Tuple<double, SolarFace>> tuples = new List<Tuple<double, SolarFace>>();
             foreach(SolarFace solarFace in solarFaces)
@@ -61,7 +63,8 @@ namespace SAM.Geometry.SolarCalculator
 
                 //solarFace.DistantPoint3D(line3D, out double distance);
 
-                double distance = MinProjectedDistance(solarFace, line3D);
+                //double distance = MinProjectedDistance(solarFace, line3D);
+                double distance = MaxProjectedDistance(solarFace, plane);
                 if(double.IsNaN(distance))
                 {
                     continue;
@@ -72,7 +75,7 @@ namespace SAM.Geometry.SolarCalculator
 
             tuples.Sort((x, y) => x.Item1.CompareTo(y.Item1));
 
-            Plane plane = new Plane(point3D, vector3D.Unit);
+
 
             List<Planar.Face2D> face2Ds_Union = new List<Planar.Face2D>();
             double area = double.NaN;
@@ -109,7 +112,7 @@ namespace SAM.Geometry.SolarCalculator
                 {
                     face2Ds_Union = Planar.Query.Union(face2Ds_Union);
                     double area_Temp = face2Ds_Union.ConvertAll(x => x.GetArea()).Sum();
-                    if (Math.Abs(area - area_Temp) < tolerance_Snap)
+                    if (Math.Abs(area - area_Temp) < tolerance_Distance)
                     {
                         if (solarFaces_Shaded != null)
                         {
