@@ -54,6 +54,7 @@
     <Compile Include="Classes\SolarFace.cs" />
     <Compile Include="Create\SolarFaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\MinProjectedDistance.cs" />
     <Compile Include="Query\ExposedToSunSolarFaces.cs" />
     <Compile Include="Query\SolarFaces.cs" />
     <Compile Include="Query\ShadedSolarFaces.cs" />
