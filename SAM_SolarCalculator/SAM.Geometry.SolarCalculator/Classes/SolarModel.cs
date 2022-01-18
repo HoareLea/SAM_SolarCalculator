@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using SAM.Core;
 using SAM.Core.SolarCalculator;
+using System.Collections.Generic;
 
 namespace SAM.Geometry.SolarCalculator
 {
@@ -24,6 +25,14 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
+        public Location Location
+        {
+            get
+            {
+                return location == null ? null : new Location(location);
+            }
+        }
+
         public bool Add(SolarFace solarFace)
         {
             if(solarFace == null)
@@ -42,6 +51,46 @@ namespace SAM.Geometry.SolarCalculator
             }
 
             return true;
+        }
+
+        public bool Add(SolarFaceSimulationResult solarFaceSimulationResult, System.Guid solarFaceGuid)
+        {
+            if (solarFaceSimulationResult == null)
+            {
+                return false;
+            }
+
+            if (relationCluster == null)
+            {
+                relationCluster = new RelationCluster();
+            }
+
+            bool result = relationCluster.AddObject(solarFaceSimulationResult);
+            if (!result)
+            {
+                return result;
+            }
+
+            if (solarFaceGuid != System.Guid.Empty)
+            {
+                SolarFace solarFace = relationCluster.GetObject<SolarFace>(solarFaceGuid);
+                if (solarFace != null)
+                {
+                    relationCluster.AddRelation(solarFaceSimulationResult, solarFace);
+                }
+            }
+
+            return result;
+        }
+        
+        public List<SolarFace> GetSolarFaces()
+        {
+            return relationCluster?.GetObjects<SolarFace>()?.ConvertAll(x => x == null ? null : new SolarFace(x));
+        }
+
+        public List<SolarFaceSimulationResult> GetSolarFaceSimulationResults()
+        {
+            return relationCluster?.GetObjects<SolarFaceSimulationResult>()?.ConvertAll(x => x == null ? null : new SolarFaceSimulationResult(x));
         }
 
         public override bool FromJObject(JObject jObject)

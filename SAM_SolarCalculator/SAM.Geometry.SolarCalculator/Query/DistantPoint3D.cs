@@ -1,8 +1,5 @@
-﻿using Innovative.Geometry;
-using SAM.Geometry.Spatial;
-using Innovative.SolarCalculator;
+﻿using SAM.Geometry.Spatial;
 using System;
-using SAM.Core;
 using System.Collections.Generic;
 
 namespace SAM.Geometry.SolarCalculator
