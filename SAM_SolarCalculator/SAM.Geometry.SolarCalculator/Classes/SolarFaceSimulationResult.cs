@@ -46,6 +46,17 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
+        public List<Spatial.Face3D> GetSunExposureFace3Ds(DateTime dateTime)
+        {
+            if(sunExposure == null)
+            {
+                return null;
+            }
+
+            Tuple<DateTime, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
+            return tuple?.Item2?.ConvertAll(x => new Spatial.Face3D(x));
+        }
+
         public override bool FromJObject(JObject jObject)
         {
             if (!base.FromJObject(jObject))

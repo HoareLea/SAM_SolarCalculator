@@ -78,8 +78,10 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Component\SAMAnalyticalSolarSimulation.cs" />
     <Compile Include="Component\SAMAnalyticalSunDirectionByHourOfYear.cs" />
     <Compile Include="Component\SAMAnalyticalSunDirectionByTime.cs" />
+    <Compile Include="Component\SAMAnalyticalSunExposure.cs" />
     <Compile Include="Kernel\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -124,6 +126,14 @@
     <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Analytical.SolarCalculator\SAM.Analytical.SolarCalculator.csproj">
       <Project>{1bfc8019-2271-4799-9dd2-cc9275a49d84}</Project>
       <Name>SAM.Analytical.SolarCalculator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Core.SolarCalculator\SAM.Core.SolarCalculator.csproj">
+      <Project>{1c86b9ac-81b3-41d8-ba48-321f28ab94f4}</Project>
+      <Name>SAM.Core.SolarCalculator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Geometry.SolarCalculator\SAM.Geometry.SolarCalculator.csproj">
+      <Project>{e5550801-4863-4036-904d-7563c9722760}</Project>
+      <Name>SAM.Geometry.SolarCalculator</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

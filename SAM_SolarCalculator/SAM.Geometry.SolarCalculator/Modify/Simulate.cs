@@ -132,5 +132,24 @@ namespace SAM.Geometry.SolarCalculator
 
             return solarModel.GetSolarFaceSimulationResults();
         }
+    
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        {
+            if(solarModel == null || hoursOfYear == null)
+            {
+                return null;
+            }
+
+            List<DateTime> dateTimes = new List<DateTime>();
+            foreach(int hourOfYear in hoursOfYear)
+            {
+                DateTime dateTime = new DateTime(year, 1, 1);
+                dateTime = dateTime.AddHours(hourOfYear - 1);
+
+                dateTimes.Add(dateTime);
+            }
+
+            return Simulate(solarModel, dateTimes, tolerance_Area, tolerance_Snap, tolerance_Distance);
+        }
     }
 }
