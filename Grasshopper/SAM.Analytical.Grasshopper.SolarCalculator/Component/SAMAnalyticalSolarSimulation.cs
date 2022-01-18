@@ -16,7 +16,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.1";
+        public override string LatestComponentVersion => "1.0.2";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -44,10 +44,15 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             {
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "_analyticalModel", NickName = "_analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
-                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_year", NickName = "_year", Description = "year", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+
+                global::Grasshopper.Kernel.Parameters.Param_Integer integer = new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_year", NickName = "_year", Description = "year", Access = GH_ParamAccess.item };
+                integer.SetPersistentData(2018);
+
+                result.Add(new GH_SAMParam(integer, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
 
                 global::Grasshopper.Kernel.Parameters.Param_Boolean boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
+                boolean.SetPersistentData(false);
                 result.Add(new GH_SAMParam(boolean, ParamVisibility.Binding));
 
                 return result.ToArray();
@@ -120,7 +125,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             }
 
             analyticalModel = new AnalyticalModel(analyticalModel);
-            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x - 1)));
+            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x)));
 
             index = Params.IndexOfOutputParam("analyticalModel");
             if (index != -1)

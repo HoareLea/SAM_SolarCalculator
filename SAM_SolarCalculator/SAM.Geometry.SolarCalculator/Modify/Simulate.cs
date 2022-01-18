@@ -35,7 +35,7 @@ namespace SAM.Geometry.SolarCalculator
             List<Tuple<DateTime, List<SolarFace>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<SolarFace>>>(null, dateTimes.Count()).ToList();
             for (int i = 0; i < dateTimes.Count(); i++)
             {
-                DateTime dateTime = dateTimes.ElementAt(0);
+                DateTime dateTime = dateTimes.ElementAt(i);
 
                 Vector3D sunDirection = Query.SunDirection(location, dateTime, false);
                 if (sunDirection == null)
@@ -63,9 +63,9 @@ namespace SAM.Geometry.SolarCalculator
                         continue;
                     }
 
-                    Face3D face3D_Merge = solarFace_Merge.Face3D;
-                    Plane plane = face3D_Merge.GetPlane();
-                    Planar.Face2D face2D_Merge = plane.Convert(face3D_Merge);
+                    Face3D face3D_ExposedToSun = solarFace_ExposedToSun.Face3D;
+                    Plane plane = face3D_ExposedToSun.GetPlane();
+                    Planar.Face2D face2D_ExposedToSun = plane.Convert(face3D_ExposedToSun);
 
                     foreach(SolarFace solarFace_SolarModel in solarFaces_SolarModel)
                     {
@@ -77,7 +77,7 @@ namespace SAM.Geometry.SolarCalculator
 
                         Planar.Face2D face2D = plane.Convert(plane.Project(face3D_SolarModel));
 
-                        List<Planar.Face2D> face2Ds_Intersection = Planar.Query.Intersection(face2D, face2D_Merge, tolerance_Distance);
+                        List<Planar.Face2D> face2Ds_Intersection = Planar.Query.Intersection(face2D, face2D_ExposedToSun, tolerance_Distance);
                         if(face2Ds_Intersection == null || face2Ds_Intersection.Count == 0)
                         {
                             continue;
@@ -107,7 +107,7 @@ namespace SAM.Geometry.SolarCalculator
                 List<Tuple<DateTime, List<Face3D>>> sunExposure = new List<Tuple<DateTime, List<Face3D>>>();
                 foreach(Tuple<DateTime, List<SolarFace>> tuple in tuples)
                 {
-                    List<SolarFace> solarFaces_Tuple = tuple.Item2.FindAll(x => x.Guid == solarFace.Guid);
+                    List<SolarFace> solarFaces_Tuple = tuple?.Item2?.FindAll(x => x.Guid == solarFace.Guid);
                     if(solarFaces_Tuple == null || solarFaces_Tuple.Count == 0)
                     {
                         continue;
@@ -132,7 +132,17 @@ namespace SAM.Geometry.SolarCalculator
 
             return solarModel.GetSolarFaceSimulationResults();
         }
-    
+
+        /// <summary>
+        /// Simulates SolarModel
+        /// </summary>
+        /// <param name="solarModel"></param>
+        /// <param name="year"></param>
+        /// <param name="hoursOfYear">hours of the year. Values starting from 0 to 8760</param>
+        /// <param name="tolerance_Area"></param>
+        /// <param name="tolerance_Snap"></param>
+        /// <param name="tolerance_Distance"></param>
+        /// <returns>SolarFaceSimulationResults</returns>
         public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(solarModel == null || hoursOfYear == null)
@@ -144,7 +154,7 @@ namespace SAM.Geometry.SolarCalculator
             foreach(int hourOfYear in hoursOfYear)
             {
                 DateTime dateTime = new DateTime(year, 1, 1);
-                dateTime = dateTime.AddHours(hourOfYear - 1);
+                dateTime = dateTime.AddHours(hourOfYear);
 
                 dateTimes.Add(dateTime);
             }

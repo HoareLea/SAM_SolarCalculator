@@ -19,7 +19,7 @@ namespace SAM.Geometry.SolarCalculator
         public SolarModel(Location location)
             : base()
         {
-            if(location == null)
+            if(location != null)
             {
                 this.location = new Location(location);
             }

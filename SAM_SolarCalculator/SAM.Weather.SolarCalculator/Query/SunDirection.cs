@@ -25,7 +25,7 @@ namespace SAM.Weather.SolarCalculator
                 year_Temp = weatherYear.Year;
             }
 
-            DateTime dateTime = new DateTime(year_Temp, 1, 1).AddHours(hourOfYear - 1);
+            DateTime dateTime = new DateTime(year_Temp, 1, 1).AddHours(hourOfYear);
 
             return Geometry.SolarCalculator.Query.SunDirection( weatherData.Location, dateTime, includeNight);
         }

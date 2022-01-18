@@ -46,7 +46,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "_analyticalModel", NickName = "_analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_year", NickName = "_year", Description = "year", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
-                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year (0-8760)", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
 
                 return result.ToArray();
             }
@@ -104,7 +104,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             List<Rhino.Geometry.Vector3d> vectors = new List<Rhino.Geometry.Vector3d>();
             foreach(int hourOfYear in hoursOfYear)
             {
-                DateTime dateTime = new DateTime(year, 1, 1).AddHours(hourOfYear - 1);
+                DateTime dateTime = new DateTime(year, 1, 1).AddHours(hourOfYear);
                 
                 Vector3D vector3D = Analytical.SolarCalculator.Query.SunDirection(analyticalModel, dateTime);
                 if(vector3D != null)
