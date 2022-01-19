@@ -3,6 +3,7 @@ using SAM.Core;
 using SAM.Core.SolarCalculator;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SAM.Geometry.SolarCalculator
 {
@@ -55,6 +56,35 @@ namespace SAM.Geometry.SolarCalculator
 
             Tuple<DateTime, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
             return tuple?.Item2?.ConvertAll(x => new Spatial.Face3D(x));
+        }
+
+        public double GetSunExposureArea(DateTime dateTime)
+        {
+            if (sunExposure == null)
+            {
+                return 0;
+            }
+
+            Tuple<DateTime, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
+            if(tuple == null || tuple.Item2 == null || tuple.Item2.Count == 0)
+            {
+                return 0;
+            }
+
+            return tuple.Item2.ConvertAll(x => x.GetArea()).Sum();
+        }
+
+        public List<DateTime> DateTimes
+        {
+            get
+            {
+                if(sunExposure == null)
+                {
+                    return null;
+                }
+
+                return sunExposure.ConvertAll(x => x.Item1);
+            }
         }
 
         public override bool FromJObject(JObject jObject)
