@@ -9,7 +9,7 @@ namespace SAM.Geometry.SolarCalculator
 {
     public static partial class Query
     {
-        public static void SolarFaces_Obsolete2(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
+        public static void SolarFaces(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
         {
             solarFaces_Shaded = null;
             solarFaces_ExposedToSun = null;
@@ -497,7 +497,7 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public static void SolarFaces(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
+        public static void SolarFaces_Obselete2(this IEnumerable<SolarFace> solarFaces, Vector3D sunDirection, out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, bool shaded = true, bool exposedToSun = true, double tolerance_Area = Tolerance.MacroDistance, double tolerance_Snap = Tolerance.MacroDistance, double tolerance_Distance = Tolerance.Distance)
         {
             solarFaces_Shaded = null;
             solarFaces_ExposedToSun = null;

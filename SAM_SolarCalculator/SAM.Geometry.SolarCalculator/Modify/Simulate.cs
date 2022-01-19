@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SAM.Geometry.SolarCalculator
 {
@@ -33,32 +34,35 @@ namespace SAM.Geometry.SolarCalculator
             Dictionary<SolarFace, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<SolarFace, List<Tuple<DateTime, Face3D>>>();
 
             List<Tuple<DateTime, List<SolarFace>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<SolarFace>>>(null, dateTimes.Count()).ToList();
-            for (int i = 0; i < dateTimes.Count(); i++)
+            Parallel.For(0, dateTimes.Count(), (int i) =>
+            //for (int i = 0; i < dateTimes.Count(); i++)
             {
                 DateTime dateTime = dateTimes.ElementAt(i);
 
                 Vector3D sunDirection = Query.SunDirection(location, dateTime, false);
                 if (sunDirection == null)
                 {
-                    continue;
+                    return;
+                    //continue;
                 }
 
                 List<SolarFace> solarFaces_ExposedToSun = Query.ExposedToSunSolarFaces(solarFaces_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Distance);
                 if (solarFaces_ExposedToSun == null || solarFaces_ExposedToSun.Count == 0)
                 {
-                    continue;
+                    return;
+                    //continue;
                 }
 
                 List<SolarFace> solarFaces_DateTime = new List<SolarFace>();
                 foreach (SolarFace solarFace_ExposedToSun in solarFaces_ExposedToSun)
                 {
                     SolarFace solarFace_Merge = solarFaces_Merge.Find(x => x.Guid == solarFace_ExposedToSun.Guid);
-                    if(solarFaces_Merge == null)
+                    if (solarFaces_Merge == null)
                     {
                         continue;
                     }
 
-                    if(!dictionary_Merge.TryGetValue(solarFace_Merge, out List<SolarFace> solarFaces_SolarModel) || solarFaces_SolarModel == null)
+                    if (!dictionary_Merge.TryGetValue(solarFace_Merge, out List<SolarFace> solarFaces_SolarModel) || solarFaces_SolarModel == null)
                     {
                         continue;
                     }
@@ -67,10 +71,10 @@ namespace SAM.Geometry.SolarCalculator
                     Plane plane = face3D_ExposedToSun.GetPlane();
                     Planar.Face2D face2D_ExposedToSun = plane.Convert(face3D_ExposedToSun);
 
-                    foreach(SolarFace solarFace_SolarModel in solarFaces_SolarModel)
+                    foreach (SolarFace solarFace_SolarModel in solarFaces_SolarModel)
                     {
                         Face3D face3D_SolarModel = solarFace_SolarModel?.Face3D;
-                        if(face3D_SolarModel == null)
+                        if (face3D_SolarModel == null)
                         {
                             continue;
                         }
@@ -78,17 +82,17 @@ namespace SAM.Geometry.SolarCalculator
                         Planar.Face2D face2D = plane.Convert(plane.Project(face3D_SolarModel));
 
                         List<Planar.Face2D> face2Ds_Intersection = Planar.Query.Intersection(face2D, face2D_ExposedToSun, tolerance_Distance);
-                        if(face2Ds_Intersection == null || face2Ds_Intersection.Count == 0)
+                        if (face2Ds_Intersection == null || face2Ds_Intersection.Count == 0)
                         {
                             continue;
                         }
 
                         Plane plane_SolarModel = face3D_SolarModel.GetPlane();
 
-                        foreach(Planar.Face2D face2D_Intersection in face2Ds_Intersection)
+                        foreach (Planar.Face2D face2D_Intersection in face2Ds_Intersection)
                         {
                             Face3D face3D = plane.Convert(face2D_Intersection);
-                            if(face3D == null)
+                            if (face3D == null)
                             {
                                 continue;
                             }
@@ -100,7 +104,7 @@ namespace SAM.Geometry.SolarCalculator
                 }
 
                 tuples[i] = new Tuple<DateTime, List<SolarFace>>(dateTime, solarFaces_DateTime);
-            }
+            });
 
             foreach(SolarFace solarFace in solarFaces)
             {
