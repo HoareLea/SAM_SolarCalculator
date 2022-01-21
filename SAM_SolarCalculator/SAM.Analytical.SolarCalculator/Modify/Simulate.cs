@@ -39,5 +39,39 @@ namespace SAM.Analytical.SolarCalculator
 
             return result;
         }
+
+        public static List<SolarFaceSimulationResult> Simulate(this BuildingModel buildingModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        {
+            if (buildingModel == null || dateTimes == null)
+            {
+                return null;
+            }
+
+            SolarModel solarModel = Convert.ToSAM_SolarModel(buildingModel);
+            if (solarModel == null)
+            {
+                return null;
+            }
+
+            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Distance);
+            if (result != null && result.Count != 0)
+            {
+                List<IPartition> partitions = buildingModel.GetPartitions();
+                foreach (SolarFaceSimulationResult solarFaceSimulationResult in result)
+                {
+                    Guid guid = Guid.Empty;
+
+                    IPartition partition = partitions.Find(x => x.Guid.ToString().Equals(solarFaceSimulationResult.Reference));
+                    if (partition != null)
+                    {
+                        guid = partition.Guid;
+                    }
+
+                    buildingModel.Add<IPartition>(solarFaceSimulationResult, guid);
+                }
+            }
+
+            return result;
+        }
     }
 }

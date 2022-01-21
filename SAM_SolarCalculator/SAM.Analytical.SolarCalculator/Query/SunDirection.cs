@@ -15,5 +15,16 @@ namespace SAM.Analytical.SolarCalculator
 
             return Geometry.SolarCalculator.Query.SunDirection(location, dateTime, includeNight);
         }
+
+        public static Vector3D SunDirection(this BuildingModel buildingModel, DateTime dateTime, bool includeNight = false)
+        {
+            Core.Location location = buildingModel?.Location;
+            if (location == null)
+            {
+                return null;
+            }
+
+            return Geometry.SolarCalculator.Query.SunDirection(location, dateTime, includeNight);
+        }
     }
 }
