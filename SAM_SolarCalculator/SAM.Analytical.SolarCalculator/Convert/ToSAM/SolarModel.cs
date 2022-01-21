@@ -6,7 +6,7 @@ namespace SAM.Analytical.SolarCalculator
 {
     public static partial class Convert
     {
-        public static SolarModel ToSAM_SolarModel(AnalyticalModel analyticalModel)
+        public static SolarModel ToSAM_SolarModel(this AnalyticalModel analyticalModel)
         {
             if(analyticalModel == null)
             {
@@ -41,6 +41,47 @@ namespace SAM.Analytical.SolarCalculator
                     result.Add(linkedFace3D);
                 }
 
+            }
+
+            return result;
+        }
+
+        public static SolarModel ToSAM_SolarModel(this BuildingModel buildingModel)
+        {
+            if (buildingModel == null)
+            {
+                return null;
+            }
+
+            SolarModel result = new SolarModel(buildingModel.Location);
+
+            List<IPartition> partitions = buildingModel.GetPartitions();
+            if (partitions != null || partitions.Count != 0)
+            {
+                foreach (IPartition partition in partitions)
+                {
+                    if(partition == null)
+                    {
+                        continue;
+                    }
+                    
+                    if(!buildingModel.Shade(partition))
+                    {
+                        List<Space> spaces = buildingModel.GetSpaces(partition);
+                        if (spaces != null && spaces.Count >= 2)
+                        {
+                            continue;
+                        }
+                    }
+
+                    LinkedFace3D linkedFace3D = Geometry.Spatial.Create.LinkedFace3D(partition);
+                    if(linkedFace3D == null)
+                    {
+                        continue;
+                    }
+
+                    result.Add(linkedFace3D);
+                }
             }
 
             return result;
