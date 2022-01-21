@@ -1,10 +1,10 @@
 ﻿using Grasshopper.Kernel;
 using SAM.Geometry.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
-using SAM.Geometry.SolarCalculator;
 using System;
 using System.Collections.Generic;
 using Grasshopper.Kernel.Types;
+using SAM.Geometry.Spatial;
 
 namespace SAM.Geometry.Grasshopper.SolarCalculator
 {
@@ -133,21 +133,21 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            if(!Query.TryGetSolarFaces(objectWrappers, out List<SolarFace> solarFaces) || solarFaces == null || solarFaces.Count == 0)
+            if(!Query.TryGetLinkedFace3Ds(objectWrappers, out List<LinkedFace3D> linkedFace3Ds) || linkedFace3Ds == null || linkedFace3Ds.Count == 0)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
             }
 
-            Geometry.SolarCalculator.Query.SolarFaces(solarFaces, Rhino.Convert.ToSAM(vector3d), out List<SolarFace> solarFaces_Shaded, out List<SolarFace> solarFaces_ExposedToSun, shaded, exposedToSun);
+            Spatial.Query.ViewField(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d), out List<LinkedFace3D> linkedFace3Ds_Shaded, out List<LinkedFace3D> linkedFace3Ds_ExposedToSun, shaded, exposedToSun);
 
             index = Params.IndexOfOutputParam("shaded");
             if (index != -1)
-                dataAccess.SetDataList(index, solarFaces_Shaded?.ConvertAll(x => x?.Face3D));
+                dataAccess.SetDataList(index, linkedFace3Ds_Shaded?.ConvertAll(x => x?.Face3D));
 
             index = Params.IndexOfOutputParam("exposedToSun");
             if (index != -1)
-                dataAccess.SetDataList(index, solarFaces_ExposedToSun?.ConvertAll(x => x?.Face3D));
+                dataAccess.SetDataList(index, linkedFace3Ds_ExposedToSun?.ConvertAll(x => x?.Face3D));
         }
     }
 }

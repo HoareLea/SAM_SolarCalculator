@@ -5,6 +5,7 @@ using SAM.Geometry.SolarCalculator;
 using System;
 using System.Collections.Generic;
 using Grasshopper.Kernel.Types;
+using SAM.Geometry.Spatial;
 
 namespace SAM.Geometry.Grasshopper.SolarCalculator
 {
@@ -91,17 +92,17 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            if (!Query.TryGetSolarFaces(objectWrappers, out List<SolarFace> solarFaces) || solarFaces == null || solarFaces.Count == 0)
+            if (!Query.TryGetLinkedFace3Ds(objectWrappers, out List<LinkedFace3D> linkedFace3Ds) || linkedFace3Ds == null || linkedFace3Ds.Count == 0)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
             }
 
-            List<SolarFace> solarFaces_Result = Geometry.SolarCalculator.Query.ShadedSolarFaces(solarFaces, Rhino.Convert.ToSAM(vector3d));
+            List<LinkedFace3D> linkedFace3Ds_Result = Spatial.Query.HiddenLinkedFace3Ds(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d));
 
             index = Params.IndexOfOutputParam("shadings");
             if (index != -1)
-                dataAccess.SetDataList(index, solarFaces_Result?.ConvertAll(x => x?.Face3D));
+                dataAccess.SetDataList(index, linkedFace3Ds_Result?.ConvertAll(x => x?.Face3D));
         }
     }
 }

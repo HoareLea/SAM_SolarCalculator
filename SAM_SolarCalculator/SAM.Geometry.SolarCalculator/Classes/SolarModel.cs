@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using SAM.Core;
 using SAM.Core.SolarCalculator;
+using SAM.Geometry.Spatial;
 using System.Collections.Generic;
 
 namespace SAM.Geometry.SolarCalculator
@@ -33,9 +34,9 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public bool Add(SolarFace solarFace)
+        public bool Add(LinkedFace3D linkedFace3D)
         {
-            if(solarFace == null)
+            if(linkedFace3D == null)
             {
                 return false;
             }
@@ -43,7 +44,7 @@ namespace SAM.Geometry.SolarCalculator
             if (relationCluster == null)
                 relationCluster = new RelationCluster();
 
-            SolarFace solarFace_Temp = new SolarFace(solarFace);
+            LinkedFace3D solarFace_Temp = new LinkedFace3D(linkedFace3D);
 
             if (!relationCluster.AddObject(solarFace_Temp))
             {
@@ -53,7 +54,7 @@ namespace SAM.Geometry.SolarCalculator
             return true;
         }
 
-        public bool Add(SolarFaceSimulationResult solarFaceSimulationResult, System.Guid solarFaceGuid)
+        public bool Add(SolarFaceSimulationResult solarFaceSimulationResult, System.Guid linkedFace3DGuid)
         {
             if (solarFaceSimulationResult == null)
             {
@@ -71,21 +72,21 @@ namespace SAM.Geometry.SolarCalculator
                 return result;
             }
 
-            if (solarFaceGuid != System.Guid.Empty)
+            if (linkedFace3DGuid != System.Guid.Empty)
             {
-                SolarFace solarFace = relationCluster.GetObject<SolarFace>(solarFaceGuid);
-                if (solarFace != null)
+                LinkedFace3D linkedFace3D = relationCluster.GetObject<LinkedFace3D>(linkedFace3DGuid);
+                if (linkedFace3D != null)
                 {
-                    relationCluster.AddRelation(solarFaceSimulationResult, solarFace);
+                    relationCluster.AddRelation(solarFaceSimulationResult, linkedFace3D);
                 }
             }
 
             return result;
         }
         
-        public List<SolarFace> GetSolarFaces()
+        public List<LinkedFace3D> GetLinkedFace3Ds()
         {
-            return relationCluster?.GetObjects<SolarFace>()?.ConvertAll(x => x == null ? null : new SolarFace(x));
+            return relationCluster?.GetObjects<LinkedFace3D>()?.ConvertAll(x => x == null ? null : new LinkedFace3D(x));
         }
 
         public List<SolarFaceSimulationResult> GetSolarFaceSimulationResults()

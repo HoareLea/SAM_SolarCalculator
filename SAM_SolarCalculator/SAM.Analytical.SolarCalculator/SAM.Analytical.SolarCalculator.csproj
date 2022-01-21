@@ -59,7 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Convert\ToSAM\AnalyticalModel.cs" />
+    <Compile Include="Convert\ToSAM\SolarModel.cs" />
     <Compile Include="Modify\Simulate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\SunDirection.cs" />

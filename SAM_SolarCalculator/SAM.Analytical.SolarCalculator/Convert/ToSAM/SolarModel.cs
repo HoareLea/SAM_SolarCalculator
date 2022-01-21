@@ -1,4 +1,5 @@
 ﻿using SAM.Geometry.SolarCalculator;
+using SAM.Geometry.Spatial;
 using System.Collections.Generic;
 
 namespace SAM.Analytical.SolarCalculator
@@ -36,8 +37,8 @@ namespace SAM.Analytical.SolarCalculator
                         continue;
                     }
 
-                    SolarFace solarFace = new SolarFace(panel.Guid, panel.Face3D);
-                    result.Add(solarFace);
+                    LinkedFace3D linkedFace3D = new LinkedFace3D(panel.Guid, panel.Face3D);
+                    result.Add(linkedFace3D);
                 }
 
             }

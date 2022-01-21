@@ -17,23 +17,23 @@ namespace SAM.Geometry.SolarCalculator
 
             Core.Location location = solarModel.Location;
 
-            List<SolarFace> solarFaces = solarModel.GetSolarFaces();
-            if(solarFaces == null)
+            List<LinkedFace3D> LinkedFace3Ds = solarModel.GetLinkedFace3Ds();
+            if(LinkedFace3Ds == null)
             {
                 return null;
             }
 
-            Dictionary<SolarFace, List<SolarFace>> dictionary_Merge = Query.Merge(solarFaces, tolerance_Snap, tolerance_Area, tolerance_Distance);
+            Dictionary<LinkedFace3D, List<LinkedFace3D>> dictionary_Merge = Query.Merge(LinkedFace3Ds, tolerance_Snap, tolerance_Area, tolerance_Distance);
             if(dictionary_Merge == null)
             {
                 return null;
             }
 
-            List<SolarFace> solarFaces_Merge = new List<SolarFace>(dictionary_Merge.Keys);
+            List<LinkedFace3D> LinkedFace3Ds_Merge = new List<LinkedFace3D>(dictionary_Merge.Keys);
 
-            Dictionary<SolarFace, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<SolarFace, List<Tuple<DateTime, Face3D>>>();
+            Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>>();
 
-            List<Tuple<DateTime, List<SolarFace>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<SolarFace>>>(null, dateTimes.Count()).ToList();
+            List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, dateTimes.Count()).ToList();
             Parallel.For(0, dateTimes.Count(), (int i) =>
             //for (int i = 0; i < dateTimes.Count(); i++)
             {
@@ -46,34 +46,34 @@ namespace SAM.Geometry.SolarCalculator
                     //continue;
                 }
 
-                List<SolarFace> solarFaces_ExposedToSun = Query.ExposedToSunSolarFaces(solarFaces_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Distance);
-                if (solarFaces_ExposedToSun == null || solarFaces_ExposedToSun.Count == 0)
+                List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Distance);
+                if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
                     return;
                     //continue;
                 }
 
-                List<SolarFace> solarFaces_DateTime = new List<SolarFace>();
-                foreach (SolarFace solarFace_ExposedToSun in solarFaces_ExposedToSun)
+                List<LinkedFace3D> LinkedFace3Ds_DateTime = new List<LinkedFace3D>();
+                foreach (LinkedFace3D linkedFace3D_ExposedToSun in linkedFace3Ds_ExposedToSun)
                 {
-                    SolarFace solarFace_Merge = solarFaces_Merge.Find(x => x.Guid == solarFace_ExposedToSun.Guid);
-                    if (solarFaces_Merge == null)
+                    LinkedFace3D linkedFace3D_Merge = LinkedFace3Ds_Merge.Find(x => x.Guid == linkedFace3D_ExposedToSun.Guid);
+                    if (LinkedFace3Ds_Merge == null)
                     {
                         continue;
                     }
 
-                    if (!dictionary_Merge.TryGetValue(solarFace_Merge, out List<SolarFace> solarFaces_SolarModel) || solarFaces_SolarModel == null)
+                    if (!dictionary_Merge.TryGetValue(linkedFace3D_Merge, out List<LinkedFace3D> solarFaces_SolarModel) || solarFaces_SolarModel == null)
                     {
                         continue;
                     }
 
-                    Face3D face3D_ExposedToSun = solarFace_ExposedToSun.Face3D;
+                    Face3D face3D_ExposedToSun = linkedFace3D_ExposedToSun.Face3D;
                     Plane plane = face3D_ExposedToSun.GetPlane();
                     Planar.Face2D face2D_ExposedToSun = plane.Convert(face3D_ExposedToSun);
 
-                    foreach (SolarFace solarFace_SolarModel in solarFaces_SolarModel)
+                    foreach (LinkedFace3D linkedFace3D_SolarModel in solarFaces_SolarModel)
                     {
-                        Face3D face3D_SolarModel = solarFace_SolarModel?.Face3D;
+                        Face3D face3D_SolarModel = linkedFace3D_SolarModel?.Face3D;
                         if (face3D_SolarModel == null)
                         {
                             continue;
@@ -97,27 +97,27 @@ namespace SAM.Geometry.SolarCalculator
                                 continue;
                             }
 
-                            solarFaces_DateTime.Add(new SolarFace(solarFace_SolarModel.Guid, plane_SolarModel.Project(face3D)));
+                            LinkedFace3Ds_DateTime.Add(new LinkedFace3D(linkedFace3D_SolarModel.Guid, plane_SolarModel.Project(face3D)));
                         }
                     }
 
                 }
 
-                tuples[i] = new Tuple<DateTime, List<SolarFace>>(dateTime, solarFaces_DateTime);
+                tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
             });
 
-            foreach(SolarFace solarFace in solarFaces)
+            foreach(LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
                 List<Tuple<DateTime, List<Face3D>>> sunExposure = new List<Tuple<DateTime, List<Face3D>>>();
-                foreach(Tuple<DateTime, List<SolarFace>> tuple in tuples)
+                foreach(Tuple<DateTime, List<LinkedFace3D>> tuple in tuples)
                 {
-                    List<SolarFace> solarFaces_Tuple = tuple?.Item2?.FindAll(x => x.Guid == solarFace.Guid);
-                    if(solarFaces_Tuple == null || solarFaces_Tuple.Count == 0)
+                    List<LinkedFace3D> linkedFace3Ds_Tuple = tuple?.Item2?.FindAll(x => x.Guid == linkedFace3D.Guid);
+                    if(linkedFace3Ds_Tuple == null || linkedFace3Ds_Tuple.Count == 0)
                     {
                         continue;
                     }
 
-                    sunExposure.Add(new Tuple<DateTime, List<Face3D>>(tuple.Item1, solarFaces_Tuple.ConvertAll(x => x.Face3D)));
+                    sunExposure.Add(new Tuple<DateTime, List<Face3D>>(tuple.Item1, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
                 }
 
                 if(sunExposure == null && sunExposure.Count == 0)
@@ -125,13 +125,13 @@ namespace SAM.Geometry.SolarCalculator
                     continue;
                 }
 
-                SolarFaceSimulationResult solarFaceSimulationResult =Create.SolarFaceSimulationResult(solarFace, sunExposure);
+                SolarFaceSimulationResult solarFaceSimulationResult =Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
                 if(solarFaceSimulationResult == null)
                 {
                     continue;
                 }
 
-                solarModel.Add(solarFaceSimulationResult, solarFace.Guid);
+                solarModel.Add(solarFaceSimulationResult, linkedFace3D.Guid);
             }
 
             return solarModel.GetSolarFaceSimulationResults();
