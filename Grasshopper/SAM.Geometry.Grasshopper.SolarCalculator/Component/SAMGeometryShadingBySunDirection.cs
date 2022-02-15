@@ -1,7 +1,6 @@
 ﻿using Grasshopper.Kernel;
 using SAM.Geometry.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
-using SAM.Geometry.SolarCalculator;
 using System;
 using System.Collections.Generic;
 using Grasshopper.Kernel.Types;
