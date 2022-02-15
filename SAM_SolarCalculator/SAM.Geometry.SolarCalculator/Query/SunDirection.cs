@@ -43,7 +43,7 @@ namespace SAM.Geometry.SolarCalculator
             Angle angle_Longitude = new Angle(location.Longitude);
 
             int timeZoneOffset = 0;
-            if (!location.TryGetValue(LocationParameter.TimeZone, out string timeZoneString))
+            if (location.TryGetValue(LocationParameter.TimeZone, out string timeZoneString))
             {
                 UTC uTC = Core.Query.UTC(timeZoneString);
                 if (uTC != UTC.Undefined)

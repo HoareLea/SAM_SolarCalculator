@@ -120,7 +120,7 @@ namespace SAM.Geometry.SolarCalculator
                     sunExposure.Add(new Tuple<DateTime, List<Face3D>>(tuple.Item1, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
                 }
 
-                if(sunExposure == null && sunExposure.Count == 0)
+                if(sunExposure == null || sunExposure.Count == 0)
                 {
                     continue;
                 }
