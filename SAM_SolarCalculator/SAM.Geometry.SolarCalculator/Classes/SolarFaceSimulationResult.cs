@@ -137,6 +137,8 @@ namespace SAM.Geometry.SolarCalculator
                     JArray jArray = new JArray();
                     jArray.Add(tuple.Item1);
                     jArray.Add(Core.Create.JArray(tuple?.Item2));
+
+                    jArray_SunExposure.Add(jArray);
                 }
 
                 jObject.Add("SunExposure", jArray_SunExposure);
