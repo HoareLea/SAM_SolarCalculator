@@ -30,7 +30,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMAnalyticalSolarSimulation()
           : base("SAMAnalytical.SolarSimulation", "SAMAnalytical.SolarSimulation",
-              "Solar Simulation for AnalyticalModel",
+              "This node tries to replicate shading calculation as per T3D. \nCalculate for each given hour % that is exposed to sun\n*This node take quite long time to complete",
               "SAM WIP", "Solar")
         {
         }
