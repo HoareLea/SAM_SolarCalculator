@@ -47,6 +47,29 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
+        public SolarFaceSimulationResult(SolarFaceSimulationResult solarFaceSimulationResult, IEnumerable<DateTime> dateTimes)
+            : base(solarFaceSimulationResult)
+        {
+            if (solarFaceSimulationResult == null)
+            {
+                return;
+            }
+
+            if (solarFaceSimulationResult.sunExposure != null)
+            {
+                sunExposure = new List<Tuple<DateTime, List<Spatial.Face3D>>>();
+                foreach (Tuple<DateTime, List<Spatial.Face3D>> tuple in solarFaceSimulationResult.sunExposure)
+                {
+                    if(dateTimes != null && !dateTimes.Contains(tuple.Item1))
+                    {
+                        continue;
+                    }
+                    
+                    sunExposure.Add(new Tuple<DateTime, List<Spatial.Face3D>>(tuple.Item1, tuple?.Item2 == null ? null : tuple.Item2.ConvertAll(x => new Spatial.Face3D(x))));
+                }
+            }
+        }
+
         public List<Spatial.Face3D> GetSunExposureFace3Ds(DateTime dateTime)
         {
             if(sunExposure == null)
