@@ -6,7 +6,7 @@ namespace SAM.Analytical.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(analyticalModel == null || dateTimes == null)
             {
@@ -19,7 +19,7 @@ namespace SAM.Analytical.SolarCalculator
                 return null;
             }
 
-            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Distance);
+            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
             if(result != null && result.Count != 0)
             {
                 List<Panel> panels = analyticalModel.GetPanels();
@@ -40,7 +40,7 @@ namespace SAM.Analytical.SolarCalculator
             return result;
         }
 
-        public static List<SolarFaceSimulationResult> Simulate(this BuildingModel buildingModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this BuildingModel buildingModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if (buildingModel == null || dateTimes == null)
             {
@@ -53,7 +53,7 @@ namespace SAM.Analytical.SolarCalculator
                 return null;
             }
 
-            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Distance);
+            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
             if (result != null && result.Count != 0)
             {
                 List<IPartition> partitions = buildingModel.GetPartitions();

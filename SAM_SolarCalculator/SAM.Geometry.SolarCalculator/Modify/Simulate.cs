@@ -8,7 +8,7 @@ namespace SAM.Geometry.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(solarModel == null || dateTimes == null)
             {
@@ -46,7 +46,7 @@ namespace SAM.Geometry.SolarCalculator
                     //continue;
                 }
 
-                List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Distance);
+                List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
                 if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
                     return;
@@ -145,9 +145,10 @@ namespace SAM.Geometry.SolarCalculator
         /// <param name="hoursOfYear">hours of the year. Values starting from 0 to 8760</param>
         /// <param name="tolerance_Area"></param>
         /// <param name="tolerance_Snap"></param>
+        /// <param name="tolerance_Angle"></param>
         /// <param name="tolerance_Distance"></param>
         /// <returns>SolarFaceSimulationResults</returns>
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(solarModel == null || hoursOfYear == null)
             {
@@ -163,7 +164,7 @@ namespace SAM.Geometry.SolarCalculator
                 dateTimes.Add(dateTime);
             }
 
-            return Simulate(solarModel, dateTimes, tolerance_Area, tolerance_Snap, tolerance_Distance);
+            return Simulate(solarModel, dateTimes, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
     }
 }
