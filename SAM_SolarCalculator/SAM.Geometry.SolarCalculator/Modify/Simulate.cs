@@ -40,7 +40,13 @@ namespace SAM.Geometry.SolarCalculator
                 DateTime dateTime = dateTimes.ElementAt(i);
 
                 Vector3D sunDirection = Query.SunDirection(location, dateTime, false);
-                if (sunDirection == null)
+                if (sunDirection == null || !sunDirection.IsValid())
+                {
+                    return;
+                    //continue;
+                }
+
+                if(sunDirection.Z > 0)
                 {
                     return;
                     //continue;
