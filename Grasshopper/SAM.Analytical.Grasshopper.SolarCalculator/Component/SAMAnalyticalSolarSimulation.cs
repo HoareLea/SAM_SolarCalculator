@@ -143,6 +143,12 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            if(analyticalModel.Location == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "AnalyticalModel missing location");
+                return;
+            }
+
             analyticalModel = new AnalyticalModel(analyticalModel);
             List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x)), tolerance_Angle: tolerance_Angle);
 
