@@ -1,4 +1,5 @@
 ﻿using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using SAM.Analytical.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
 using System;
@@ -51,9 +52,9 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 integer.SetPersistentData(2018);
                 result.Add(new GH_SAMParam(integer, ParamVisibility.Binding));
 
-                integer = new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year", Access = GH_ParamAccess.list };
-                integer.SetPersistentData(Analytical.Query.DefaultHoursOfYear().ToArray());
-                result.Add(new GH_SAMParam(integer, ParamVisibility.Binding));
+                global::Grasshopper.Kernel.Parameters.Param_GenericObject genericObject = new global::Grasshopper.Kernel.Parameters.Param_GenericObject() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year", Access = GH_ParamAccess.list };
+                genericObject.SetPersistentData(Analytical.Query.DefaultHoursOfYear().ToArray());
+                result.Add(new GH_SAMParam(genericObject, ParamVisibility.Binding));
 
                 global::Grasshopper.Kernel.Parameters.Param_Number number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_angleTolerance_", NickName = "_angleTolerance_", Description = "Angle Tolerance", Access = GH_ParamAccess.item };
                 number.SetPersistentData(Core.Tolerance.Angle);
@@ -128,8 +129,8 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
 
             index = Params.IndexOfInputParam("_hoursOfYear");
-            List<int> hoursOfYear = new List<int>();
-            if (index == -1 || !dataAccess.GetDataList(index, hoursOfYear) || hoursOfYear == null || hoursOfYear.Count == 0)
+            List<GH_ObjectWrapper> objectWrappers = new List<GH_ObjectWrapper>();
+            if (index == -1 || !dataAccess.GetDataList(index, objectWrappers) || objectWrappers == null || objectWrappers.Count == 0)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
@@ -143,6 +144,37 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            List<DateTime> dateTimes = new List<DateTime>();
+            foreach(GH_ObjectWrapper objectWrapper in objectWrappers)
+            {
+                object @object = (objectWrapper?.Value as dynamic).Value;
+                if(@object == null)
+                {
+                    continue;
+                }
+
+                if(@object is int)
+                {
+                    dateTimes.Add(new DateTime(year, 1, 1).AddHours((int)@object));
+                }
+                else if (@object is DateTime)
+                {
+                    dateTimes.Add((DateTime)@object);
+                }
+
+                //hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x)
+            }
+
+
+            //List<int> hoursOfYear = new List<int>();
+            //if (index == -1 || !dataAccess.GetDataList(index, hoursOfYear) || hoursOfYear == null || hoursOfYear.Count == 0)
+            //{
+            //    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
+            //    return;
+            //}
+
+
+
             if(analyticalModel.Location == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "AnalyticalModel missing location");
@@ -150,7 +182,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             }
 
             analyticalModel = new AnalyticalModel(analyticalModel);
-            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x)), tolerance_Angle: tolerance_Angle);
+            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, dateTimes, tolerance_Angle: tolerance_Angle);
 
             index = Params.IndexOfOutputParam("analyticalModel");
             if (index != -1)
