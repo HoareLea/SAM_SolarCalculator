@@ -18,7 +18,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.0";
+        public override string LatestComponentVersion => "1.0.1";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -46,7 +46,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             {
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "_analyticalModel", NickName = "_analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
-                result.Add(new GH_SAMParam(new GooPanelParam() { Name = "_panel", NickName = "_panel", Description = "SAM Analytical Panel", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new GooAnalyticalObjectParam() { Name = "_panel", NickName = "_panel", Description = "SAM Analytical Panel", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Time() { Name = "_time", NickName = "_time", Description = "Time", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
 
                 return result.ToArray();
@@ -63,7 +63,13 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "face3D", NickName = "face3D", Description = "SAM Analytical Panel Face3D", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "exposedToSunPercent", NickName = "exposedToSunPercent", Description = "Percent of face exposed to sun", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "face3D_Panel", NickName = "face3D_Panel", Description = "SAM Analytical Panel Face3D (Excluding Apertures)", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "exposedToSunFace3Ds", NickName = "exposedToSunFace3D", Description = "Face3D exposed to sun", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "exposedToSunPercent_Panel", NickName = "exposedToSunPercent_Panel", Description = "Percent of Panel face exposed to sun (Excluding Apertures)", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "exposedToSunFace3Ds_Panel", NickName = "exposedToSunFace3D_Panel", Description = "Panel Face3Ds exposed to sun (Excluding Apertures)", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "face3Ds_Apertures", NickName = "face3Ds_Apertures", Description = "SAM Analytical Apertures Face3Ds", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "exposedToSunPercent_Apertures", NickName = "exposedToSunPercent_Apertures", Description = "Percent of Apertures faces exposed to sun", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Brep() { Name = "exposedToSunFace3Ds_Apertures", NickName = "exposedToSunFace3D_Apertures", Description = "Apertures Face3Ds exposed to sun", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
                 return result.ToArray();
             }
         }
@@ -87,8 +93,8 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             }
 
             index = Params.IndexOfInputParam("_panel");
-            Panel panel = null;
-            if (index == -1 || !dataAccess.GetData(index, ref panel) || panel == null)
+            IAnalyticalObject analyticalObject = null;
+            if (index == -1 || !dataAccess.GetData(index, ref analyticalObject) || analyticalObject == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
@@ -102,27 +108,49 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
-            panel = analyticalModel?.GetPanels()?.Find(x => x.Guid == panel.Guid);
-            if(panel == null)
+            Panel panel = null;
+            List<Aperture> apertures = null;
+
+            if(analyticalObject is Panel)
+            {
+                panel = (Panel)analyticalObject;
+            }
+            else if(analyticalObject is Aperture)
+            {
+                apertures = new List<Aperture>() { (Aperture)analyticalObject };
+            }
+            else
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
             }
 
-            Geometry.Spatial.Face3D face3D = panel.Face3D;
-            double percent = 0;
-            List<Geometry.Spatial.Face3D> face3Ds = null;
+            panel = apertures != null ? analyticalModel?.AdjacencyCluster?.GetPanel(apertures[0]) : analyticalModel?.GetPanels()?.Find(x => x.Guid == panel.Guid);
 
-            SolarFaceSimulationResult solarFaceSimulationResult = analyticalModel.GetResults<SolarFaceSimulationResult>(panel)?.FirstOrDefault();
-            if(solarFaceSimulationResult != null)
+            if(panel == null)
             {
-                face3Ds = solarFaceSimulationResult.GetSunExposureFace3Ds(dateTime);
-                if(face3Ds != null && face3Ds.Count != 0)
-                {
-                    double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
-                    percent = area / face3D.GetArea();
-                }
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
+                return;
+            }
+            
+            SolarFaceSimulationResult solarFaceSimulationResult = analyticalModel.GetResults<SolarFaceSimulationResult>(analyticalObject)?.FirstOrDefault();
+            if(solarFaceSimulationResult == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "SolarFaceSimulationResult not found. It seems model has not been simulated.");
+            }
 
+            List<Geometry.Spatial.Face3D> face3Ds = null;
+            Geometry.Spatial.Face3D face3D = null;
+            double percent = double.NaN;
+
+
+            face3D = panel.Face3D;
+            percent = 0;
+            face3Ds = solarFaceSimulationResult?.GetSunExposureFace3Ds(dateTime);
+            if (face3Ds != null && face3Ds.Count != 0)
+            {
+                double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
+                percent = area / face3D.GetArea();
             }
 
             index = Params.IndexOfOutputParam("face3D");
@@ -136,6 +164,68 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             index = Params.IndexOfOutputParam("exposedToSunFace3Ds");
             if (index != -1)
                 dataAccess.SetDataList(index, face3Ds?.ConvertAll(x => Geometry.Rhino.Convert.ToRhino_Brep(x)));
+
+            face3D = panel.GetFace3D(true);
+            percent = 0;
+            face3Ds = Geometry.SolarCalculator.Query.SunExposureFace3Ds(solarFaceSimulationResult, face3D, dateTime);
+            if (face3Ds != null && face3Ds.Count != 0)
+            {
+                double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
+                percent = area / face3D.GetArea();
+            }
+
+            index = Params.IndexOfOutputParam("face3D_Panel");
+            if (index != -1)
+                dataAccess.SetData(index, Geometry.Rhino.Convert.ToRhino_Brep(face3D));
+
+            index = Params.IndexOfOutputParam("exposedToSunPercent_Panel");
+            if (index != -1)
+                dataAccess.SetData(index, percent);
+
+            index = Params.IndexOfOutputParam("exposedToSunFace3Ds_Panel");
+            if (index != -1)
+                dataAccess.SetDataList(index, face3Ds?.ConvertAll(x => Geometry.Rhino.Convert.ToRhino_Brep(x)));
+
+
+            if (apertures == null)
+            {
+                apertures = panel.Apertures;
+            }
+
+            List<Geometry.Spatial.Face3D> face3Ds_Apertures = new List<Geometry.Spatial.Face3D>();
+            List<double> percents = new List<double>();
+            List<Geometry.Spatial.Face3D> face3Ds_Apertures_SunExposure = new List<Geometry.Spatial.Face3D>();
+            if(apertures != null)
+            {
+                foreach(Aperture aperture in apertures)
+                {
+                    face3D = aperture.GetFace3D();
+                    percent = 0;
+                    face3Ds = Geometry.SolarCalculator.Query.SunExposureFace3Ds(solarFaceSimulationResult, face3D, dateTime);
+                    if (face3Ds != null && face3Ds.Count != 0)
+                    {
+                        double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
+                        percent = area / face3D.GetArea();
+                    }
+
+                    face3Ds_Apertures.Add(face3D);
+                    percents.Add(percent);
+                    face3Ds_Apertures_SunExposure.AddRange(face3Ds);
+                }
+            }
+
+            index = Params.IndexOfOutputParam("face3Ds_Apertures");
+            if (index != -1)
+                dataAccess.SetDataList(index, face3Ds_Apertures?.ConvertAll(x => Geometry.Rhino.Convert.ToRhino_Brep(x)));
+
+            index = Params.IndexOfOutputParam("exposedToSunPercent_Apertures");
+            if (index != -1)
+                dataAccess.SetDataList(index, percents);
+
+            index = Params.IndexOfOutputParam("exposedToSunFace3Ds_Apertures");
+            if (index != -1)
+                dataAccess.SetDataList(index, face3Ds_Apertures_SunExposure?.ConvertAll(x => Geometry.Rhino.Convert.ToRhino_Brep(x)));
+
         }
     }
 }

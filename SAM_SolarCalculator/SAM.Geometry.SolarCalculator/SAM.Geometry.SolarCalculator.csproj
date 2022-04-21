@@ -57,6 +57,7 @@
     <Compile Include="Modify\Simulate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\Merge.cs" />
+    <Compile Include="Query\SunExposureFace3Ds.cs" />
     <Compile Include="Query\Source.cs" />
     <Compile Include="Query\SunDirection.cs" />
   </ItemGroup>
