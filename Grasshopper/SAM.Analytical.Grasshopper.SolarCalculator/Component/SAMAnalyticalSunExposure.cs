@@ -32,7 +32,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMGeometrySunExposure()
           : base("SAMGeometry.SunExposure", "SAMGeometry.SunExposure",
-              "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results disply to specific items  ",
+              "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results display to specific items  ",
               "SAM WIP", "Solar")
         {
         }
