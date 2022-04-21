@@ -32,7 +32,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMGeometrySunExposure()
           : base("SAMGeometry.SunExposure", "SAMGeometry.SunExposure",
-              "Gets Sun Exposure Data",
+              "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results disply to specific items  ",
               "SAM WIP", "Solar")
         {
         }
@@ -46,7 +46,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             {
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "_analyticalModel", NickName = "_analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
-                result.Add(new GH_SAMParam(new GooAnalyticalObjectParam() { Name = "_panel", NickName = "_panel", Description = "SAM Analytical Panel", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new GooAnalyticalObjectParam() { Name = "_panel", NickName = "_panel", Description = "SAM Analytical Panel \n*Aperture is possible as well", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Time() { Name = "_time", NickName = "_time", Description = "Time", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
 
                 return result.ToArray();
@@ -135,7 +135,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
             
-            SolarFaceSimulationResult solarFaceSimulationResult = analyticalModel.GetResults<SolarFaceSimulationResult>(analyticalObject)?.FirstOrDefault();
+            SolarFaceSimulationResult solarFaceSimulationResult = analyticalModel.GetResults<SolarFaceSimulationResult>(panel)?.FirstOrDefault();
             if(solarFaceSimulationResult == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "SolarFaceSimulationResult not found. It seems model has not been simulated.");
@@ -212,7 +212,10 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
                     face3Ds_Apertures.Add(face3D);
                     percents.Add(percent);
-                    face3Ds_Apertures_SunExposure.AddRange(face3Ds);
+                    if(face3Ds != null)
+                    {
+                        face3Ds_Apertures_SunExposure.AddRange(face3Ds);
+                    }
                 }
             }
 
