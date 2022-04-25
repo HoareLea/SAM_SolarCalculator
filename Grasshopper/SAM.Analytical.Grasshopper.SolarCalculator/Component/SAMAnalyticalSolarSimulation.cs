@@ -193,7 +193,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             index = Params.IndexOfOutputParam("solarFaceSimulationResults");
             if (index != -1)
             {
-                dataAccess.SetData(index, solarFaceSimulationResults?.ConvertAll(x => new GooResult(x)));
+                dataAccess.SetDataList(index, solarFaceSimulationResults?.ConvertAll(x => new GooResult(x)));
             }
 
             if (index_Successful != -1)
