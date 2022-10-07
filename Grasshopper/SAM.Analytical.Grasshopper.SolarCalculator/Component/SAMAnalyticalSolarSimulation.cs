@@ -153,9 +153,9 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                     continue;
                 }
 
-                if(@object is int)
+                if(Core.Query.IsNumeric(@object))
                 {
-                    dateTimes.Add(new DateTime(year, 1, 1).AddHours((int)@object));
+                    dateTimes.Add(new DateTime(year, 1, 1).AddHours(System.Convert.ToInt32(@object)));
                 }
                 else if (@object is DateTime)
                 {
