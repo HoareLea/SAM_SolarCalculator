@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.0";
+        public override string LatestComponentVersion => "1.0.1";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -64,7 +64,13 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 number.SetPersistentData(Core.Tolerance.Angle);
                 result.Add(new GH_SAMParam(number, ParamVisibility.Voluntary));
 
-                global::Grasshopper.Kernel.Parameters.Param_Boolean boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
+                global::Grasshopper.Kernel.Parameters.Param_Boolean boolean;
+
+                boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_merge_", NickName = "_merge_", Description = "Merge SolarFace3DSimulationResults with the results existing in the given Analytical Model", Access = GH_ParamAccess.item };
+                boolean.SetPersistentData(true);
+                result.Add(new GH_SAMParam(boolean, ParamVisibility.Binding));
+
+                boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
                 boolean.SetPersistentData(false);
                 result.Add(new GH_SAMParam(boolean, ParamVisibility.Binding));
 
@@ -198,8 +204,18 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            bool merge = true;
+            index = Params.IndexOfInputParam("_merge_");
+            if(index != -1)
+            {
+                if(!dataAccess.GetData(index, ref merge))
+                {
+                    merge = true;
+                }
+            }
+
             analyticalModel = new AnalyticalModel(analyticalModel);
-            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, directionDictionary, tolerance_Angle: tolerance_Angle);
+            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, directionDictionary, merge, tolerance_Angle: tolerance_Angle);
 
             index = Params.IndexOfOutputParam("analyticalModel");
             if (index != -1)

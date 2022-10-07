@@ -54,6 +54,7 @@
     <Compile Include="Classes\SolarModel.cs" />
     <Compile Include="Classes\SolarFaceSimulationResult.cs" />
     <Compile Include="Create\SolarFaceSimulationResult.cs" />
+    <Compile Include="Modify\Merge.cs" />
     <Compile Include="Modify\Simulate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\Merge.cs" />

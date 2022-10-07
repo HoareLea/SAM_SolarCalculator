@@ -7,7 +7,7 @@ namespace SAM.Analytical.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, IEnumerable<DateTime> dateTimes, bool merge = false, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(analyticalModel == null || dateTimes == null)
             {
@@ -26,10 +26,10 @@ namespace SAM.Analytical.SolarCalculator
                 directionDictionary[dateTime] = Geometry.SolarCalculator.Query.SunDirection(location, dateTime, false);
             }
 
-            return Simulate(analyticalModel, directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            return Simulate(analyticalModel, directionDictionary, merge, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
 
-        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, Dictionary<DateTime, Vector3D> directionDictionary, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, Dictionary<DateTime, Vector3D> directionDictionary, bool merge = false,double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if (analyticalModel == null || directionDictionary == null)
             {
@@ -42,11 +42,15 @@ namespace SAM.Analytical.SolarCalculator
                 return null;
             }
 
-            List<SolarFaceSimulationResult> result = solarModel.Simulate(directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
-            if (result != null && result.Count != 0)
+            List<SolarFaceSimulationResult> result = null;
+
+            List<SolarFaceSimulationResult> solarFaceSimulationResults = solarModel.Simulate(directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            if (solarFaceSimulationResults != null && solarFaceSimulationResults.Count != 0)
             {
+                result = new List<SolarFaceSimulationResult>();
+
                 List<Panel> panels = analyticalModel.GetPanels();
-                foreach (SolarFaceSimulationResult solarFaceSimulationResult in result)
+                foreach (SolarFaceSimulationResult solarFaceSimulationResult in solarFaceSimulationResults)
                 {
                     Guid guid = Guid.Empty;
 
@@ -56,11 +60,36 @@ namespace SAM.Analytical.SolarCalculator
                         guid = panel.Guid;
                     }
 
-                    analyticalModel.AddResult<Panel>(solarFaceSimulationResult, guid);
+                    if(!merge)
+                    {
+                        analyticalModel.AddResult<Panel>(solarFaceSimulationResult, guid);
+                        result.Add(solarFaceSimulationResult);
+                        continue;
+                    }
+
+                    List<SolarFaceSimulationResult> solarFaceSimulationResuls_Panel = analyticalModel.GetRelatedObjects<SolarFaceSimulationResult>(panel);
+                    if(solarFaceSimulationResuls_Panel == null || solarFaceSimulationResuls_Panel.Count == 0)
+                    {
+                        analyticalModel.AddResult<Panel>(solarFaceSimulationResult, guid);
+                        result.Add(solarFaceSimulationResult);
+                        continue;
+                    }
+
+                    foreach(SolarFaceSimulationResult solarFaceSimulationResult_Panel in solarFaceSimulationResuls_Panel)
+                    {
+                        SolarFaceSimulationResult solarFaceSimulationResult_New = solarFaceSimulationResult_Panel.Merge(solarFaceSimulationResult);
+                        if(solarFaceSimulationResult_New == null)
+                        {
+                            continue;
+                        }
+
+                        analyticalModel.AddResult<Panel>(solarFaceSimulationResult_New, guid);
+                        result.Add(solarFaceSimulationResult_New);
+                    }
                 }
             }
 
-            return result;
+            return solarFaceSimulationResults;
         }
 
         public static List<SolarFaceSimulationResult> Simulate(this BuildingModel buildingModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
