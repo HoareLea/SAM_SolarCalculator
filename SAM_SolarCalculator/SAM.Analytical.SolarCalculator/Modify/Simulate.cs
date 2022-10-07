@@ -1,4 +1,5 @@
 ﻿using SAM.Geometry.SolarCalculator;
+using SAM.Geometry.Spatial;
 using System;
 using System.Collections.Generic;
 
@@ -13,14 +14,36 @@ namespace SAM.Analytical.SolarCalculator
                 return null;
             }
 
-            SolarModel solarModel = Convert.ToSAM_SolarModel(analyticalModel);
-            if(solarModel == null)
+            Core.Location location = analyticalModel.Location;
+            if (location == null)
             {
                 return null;
             }
 
-            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
-            if(result != null && result.Count != 0)
+            Dictionary<DateTime, Vector3D> directionDictionary = new Dictionary<DateTime, Vector3D>();
+            foreach (DateTime dateTime in dateTimes)
+            {
+                directionDictionary[dateTime] = Geometry.SolarCalculator.Query.SunDirection(location, dateTime, false);
+            }
+
+            return Simulate(analyticalModel, directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+        }
+
+        public static List<SolarFaceSimulationResult> Simulate(this AnalyticalModel analyticalModel, Dictionary<DateTime, Vector3D> directionDictionary, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        {
+            if (analyticalModel == null || directionDictionary == null)
+            {
+                return null;
+            }
+
+            SolarModel solarModel = Convert.ToSAM_SolarModel(analyticalModel);
+            if (solarModel == null)
+            {
+                return null;
+            }
+
+            List<SolarFaceSimulationResult> result = solarModel.Simulate(directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            if (result != null && result.Count != 0)
             {
                 List<Panel> panels = analyticalModel.GetPanels();
                 foreach (SolarFaceSimulationResult solarFaceSimulationResult in result)
@@ -28,7 +51,7 @@ namespace SAM.Analytical.SolarCalculator
                     Guid guid = Guid.Empty;
 
                     Panel panel = panels.Find(x => x.Guid.ToString().Equals(solarFaceSimulationResult.Reference));
-                    if(panel != null)
+                    if (panel != null)
                     {
                         guid = panel.Guid;
                     }

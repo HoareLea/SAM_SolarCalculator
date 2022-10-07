@@ -13,7 +13,12 @@ namespace SAM.Geometry.SolarCalculator
                 return null;
             }
 
-            SolarFaceSimulationResult result = new SolarFaceSimulationResult(name, Query.Source(), linkedFace3D.Guid.ToString(), sunExposure);
+            return SolarFaceSimulationResult(linkedFace3D.Guid, sunExposure, name);
+        }
+
+        public static SolarFaceSimulationResult SolarFaceSimulationResult(this Guid guid, IEnumerable<Tuple<DateTime, List<Face3D>>> sunExposure, string name = null)
+        {
+            SolarFaceSimulationResult result = new SolarFaceSimulationResult(name, Query.Source(), guid.ToString(), sunExposure);
             return result;
         }
     }

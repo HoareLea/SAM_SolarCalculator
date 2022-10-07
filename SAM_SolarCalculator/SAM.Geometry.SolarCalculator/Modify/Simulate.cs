@@ -8,9 +8,9 @@ namespace SAM.Geometry.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, Dictionary<DateTime, Vector3D> directionDictionary, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
-            if(solarModel == null || dateTimes == null)
+            if (solarModel == null || directionDictionary == null)
             {
                 return null;
             }
@@ -18,13 +18,13 @@ namespace SAM.Geometry.SolarCalculator
             Core.Location location = solarModel.Location;
 
             List<LinkedFace3D> LinkedFace3Ds = solarModel.GetLinkedFace3Ds();
-            if(LinkedFace3Ds == null)
+            if (LinkedFace3Ds == null)
             {
                 return null;
             }
 
             Dictionary<LinkedFace3D, List<LinkedFace3D>> dictionary_Merge = Query.Merge(LinkedFace3Ds, tolerance_Snap, tolerance_Area, tolerance_Distance);
-            if(dictionary_Merge == null)
+            if (dictionary_Merge == null)
             {
                 return null;
             }
@@ -33,20 +33,20 @@ namespace SAM.Geometry.SolarCalculator
 
             Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>>();
 
-            List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, dateTimes.Count()).ToList();
-            Parallel.For(0, dateTimes.Count(), (int i) =>
+            List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, directionDictionary.Count()).ToList();
+            Parallel.For(0, directionDictionary.Count(), (int i) =>
             //for (int i = 0; i < dateTimes.Count(); i++)
             {
-                DateTime dateTime = dateTimes.ElementAt(i);
+                DateTime dateTime = directionDictionary.Keys.ElementAt(i);
 
-                Vector3D sunDirection = Query.SunDirection(location, dateTime, false);
+                Vector3D sunDirection = directionDictionary[dateTime];
                 if (sunDirection == null || !sunDirection.IsValid())
                 {
                     return;
                     //continue;
                 }
 
-                if(sunDirection.Z > 0)
+                if (sunDirection.Z > 0)
                 {
                     return;
                     //continue;
@@ -112,13 +112,13 @@ namespace SAM.Geometry.SolarCalculator
                 tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
             });
 
-            foreach(LinkedFace3D linkedFace3D in LinkedFace3Ds)
+            foreach (LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
                 List<Tuple<DateTime, List<Face3D>>> sunExposure = new List<Tuple<DateTime, List<Face3D>>>();
-                foreach(Tuple<DateTime, List<LinkedFace3D>> tuple in tuples)
+                foreach (Tuple<DateTime, List<LinkedFace3D>> tuple in tuples)
                 {
                     List<LinkedFace3D> linkedFace3Ds_Tuple = tuple?.Item2?.FindAll(x => x.Guid == linkedFace3D.Guid);
-                    if(linkedFace3Ds_Tuple == null || linkedFace3Ds_Tuple.Count == 0)
+                    if (linkedFace3Ds_Tuple == null || linkedFace3Ds_Tuple.Count == 0)
                     {
                         continue;
                     }
@@ -126,13 +126,13 @@ namespace SAM.Geometry.SolarCalculator
                     sunExposure.Add(new Tuple<DateTime, List<Face3D>>(tuple.Item1, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
                 }
 
-                if(sunExposure == null || sunExposure.Count == 0)
+                if (sunExposure == null || sunExposure.Count == 0)
                 {
                     continue;
                 }
 
-                SolarFaceSimulationResult solarFaceSimulationResult =Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
-                if(solarFaceSimulationResult == null)
+                SolarFaceSimulationResult solarFaceSimulationResult = Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
+                if (solarFaceSimulationResult == null)
                 {
                     continue;
                 }
@@ -141,6 +141,30 @@ namespace SAM.Geometry.SolarCalculator
             }
 
             return solarModel.GetSolarFaceSimulationResults();
+        }
+
+
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        {
+            if(solarModel == null || dateTimes == null)
+            {
+                return null;
+            }
+
+            Core.Location location = solarModel.Location;
+
+            if(location == null)
+            {
+                return null;
+            }
+
+            Dictionary<DateTime, Vector3D> directionDictionary = new Dictionary<DateTime, Vector3D>();
+            foreach(DateTime dateTime in dateTimes)
+            {
+                directionDictionary[dateTime] = Query.SunDirection(location, dateTime, false);
+            }
+
+            return Simulate(solarModel, directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
 
         /// <summary>

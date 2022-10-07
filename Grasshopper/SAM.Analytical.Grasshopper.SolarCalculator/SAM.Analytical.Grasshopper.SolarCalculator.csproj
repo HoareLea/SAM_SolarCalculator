@@ -79,6 +79,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Component\SAMAnalyticalModifySolarFaceSimulationResult.cs" />
     <Compile Include="Component\SAMAnalyticalSolarSimulation.cs" />
     <Compile Include="Component\SAMAnalyticalSunDirectionByHourOfYear.cs" />
     <Compile Include="Component\SAMAnalyticalSunDirectionByTime.cs" />
