@@ -189,7 +189,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 DateTime dateTime = dateTimes[i];
 
                 GH_Vector vector = null;
-                if(vectors.Count < i)
+                if(vectors.Count > i)
                 {
                     vector = vectors[i];
                 }
