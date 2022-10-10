@@ -57,7 +57,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 genericObject.SetPersistentData(Analytical.Query.DefaultHoursOfYear().ToArray());
                 result.Add(new GH_SAMParam(genericObject, ParamVisibility.Binding));
 
-                global::Grasshopper.Kernel.Parameters.Param_Vector vector = new global::Grasshopper.Kernel.Parameters.Param_Vector() { Name = "_directions_", NickName = "_directions_", Description = "Sun Directions", Access = GH_ParamAccess.list };
+                global::Grasshopper.Kernel.Parameters.Param_Vector vector = new global::Grasshopper.Kernel.Parameters.Param_Vector() { Name = "_sunVectors", NickName = "_sunVectors", Description = "Sun Vectors Directions", Access = GH_ParamAccess.list };
                 result.Add(new GH_SAMParam(vector, ParamVisibility.Binding));
 
                 global::Grasshopper.Kernel.Parameters.Param_Number number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_angleTolerance_", NickName = "_angleTolerance_", Description = "Angle Tolerance", Access = GH_ParamAccess.item };
@@ -155,6 +155,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             }
 
             List<GH_Vector> vectors = new List<GH_Vector>();
+            index = Params.IndexOfInputParam("_sunVectors"); 
             if (index == -1 || !dataAccess.GetDataList(index, vectors) || vectors == null || vectors.Count == 0)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
@@ -170,9 +171,9 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                     continue;
                 }
 
-                if(@object is int)
+                if(SAM.Core.Query.IsNumeric(@object))
                 {
-                    dateTimes.Add(new DateTime(year, 1, 1).AddHours((int)@object));
+                    dateTimes.Add(new DateTime(year, 1, 1).AddHours(System.Convert.ToInt32(@object)));
                 }
                 else if (@object is DateTime)
                 {
@@ -198,6 +199,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
 
             Panel panel = null;
+            index = Params.IndexOfInputParam("_panel");
             if (index == -1 || !dataAccess.GetData(index, ref panel) || panel == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
