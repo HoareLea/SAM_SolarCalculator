@@ -31,7 +31,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMAnalyticalModifySolarFaceSimulationResult()
           : base("SAMAnalytical.ModifySolarFaceSimulationResult", "SAMAnalytical.ModifySolarFaceSimulationResult",
-              "",
+              "This node modify Shading data for Panel",
               "SAM WIP", "Solar")
         {
         }
