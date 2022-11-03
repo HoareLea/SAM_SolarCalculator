@@ -34,29 +34,36 @@ namespace SAM.Geometry.SolarCalculator
             Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>>();
 
             List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, directionDictionary.Count()).ToList();
-            Parallel.For(0, directionDictionary.Count(), (int i) =>
-            //for (int i = 0; i < dateTimes.Count(); i++)
+            //Parallel.For(0, directionDictionary.Count(), (int i) =>
+            for (int i = 0; i < directionDictionary.Count(); i++)
             {
                 DateTime dateTime = directionDictionary.Keys.ElementAt(i);
 
                 Vector3D sunDirection = directionDictionary[dateTime];
                 if (sunDirection == null || !sunDirection.IsValid())
                 {
-                    return;
-                    //continue;
+                    //return;
+                    continue;
                 }
 
                 if (sunDirection.Z > 0)
                 {
-                    return;
-                    //continue;
+                    //return;
+                    continue;
+                }
+
+                double angle = Plane.WorldXY.Project(sunDirection).SmallestAngle(sunDirection);
+                if(angle < 0.00174533)
+                {
+                    //return;
+                    continue;
                 }
 
                 List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
                 if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
-                    return;
-                    //continue;
+                    //return;
+                    continue;
                 }
 
                 List<LinkedFace3D> LinkedFace3Ds_DateTime = new List<LinkedFace3D>();
@@ -110,7 +117,7 @@ namespace SAM.Geometry.SolarCalculator
                 }
 
                 tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
-            });
+            }//);
 
             foreach (LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
