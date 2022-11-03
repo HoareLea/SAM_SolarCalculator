@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.4";
+        public override string LatestComponentVersion => "1.0.5";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -58,6 +58,10 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
                 global::Grasshopper.Kernel.Parameters.Param_Number number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_angleTolerance_", NickName = "_angleTolerance_", Description = "Angle Tolerance", Access = GH_ParamAccess.item };
                 number.SetPersistentData(Core.Tolerance.Angle);
+                result.Add(new GH_SAMParam(number, ParamVisibility.Voluntary));
+
+                number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_timeShift_", NickName = "_timeShift_", Description = "Time Shift in minutes to be added/deducted from hour of the year", Access = GH_ParamAccess.item };
+                number.SetPersistentData(0);
                 result.Add(new GH_SAMParam(number, ParamVisibility.Voluntary));
 
                 global::Grasshopper.Kernel.Parameters.Param_Boolean boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
@@ -119,7 +123,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 }
             }
 
-                index = Params.IndexOfInputParam("_analyticalModel");
+            index = Params.IndexOfInputParam("_analyticalModel");
             AnalyticalModel analyticalModel = null;
             if (index == -1 || !dataAccess.GetData(index, ref analyticalModel) || analyticalModel == null)
             {
@@ -144,6 +148,17 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            index = Params.IndexOfInputParam("_timeShift_");
+            double timeShift = 0;
+            if (index != -1)
+            {
+                double timeShift_Temp = timeShift;
+                if (dataAccess.GetData(index, ref timeShift_Temp) && !double.IsNaN(timeShift_Temp))
+                {
+                    timeShift = timeShift_Temp;
+                }
+            }
+
             List<DateTime> dateTimes = new List<DateTime>();
             foreach(GH_ObjectWrapper objectWrapper in objectWrappers)
             {
@@ -153,14 +168,28 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                     continue;
                 }
 
+                DateTime dateTime = DateTime.MinValue;
+
                 if(Core.Query.IsNumeric(@object))
                 {
-                    dateTimes.Add(new DateTime(year, 1, 1).AddHours(System.Convert.ToInt32(@object)));
+                    dateTime = new DateTime(year, 1, 1).AddHours(System.Convert.ToInt32(@object));
                 }
                 else if (@object is DateTime)
                 {
-                    dateTimes.Add((DateTime)@object);
+                    dateTime = (DateTime)@object;
                 }
+
+                if(dateTime == DateTime.MinValue)
+                {
+                    continue;
+                }
+
+                if(timeShift != 0)
+                {
+                    dateTime.AddMinutes(timeShift);
+                }
+
+                dateTimes.Add(dateTime);
 
                 //hoursOfYear.ConvertAll(x => new DateTime(year, 1, 1).AddHours(x)
             }
