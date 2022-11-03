@@ -31,8 +31,8 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMAnalyticalSolarSimulation()
           : base("SAMAnalytical.SolarSimulation", "SAMAnalytical.SolarSimulation",
-              "This node tries to replicate shading calculation as per T3D. \nCalculate for each given hour % that is exposed to sun\n*This node take quite long time to complete",
-              "SAM WIP", "Solar")
+              "This node tries to replicate shading calculation as per T3D. \nCalculate for each given hour % that is exposed to sun\n*This node take quite long time to complete\n_timeShift_ Is set to  -30min to follow Tas EDSL apporach at 9:00 is calculated at 8:30",
+              "SAM", "Solar")
         {
         }
 
@@ -60,9 +60,9 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 number.SetPersistentData(Core.Tolerance.Angle);
                 result.Add(new GH_SAMParam(number, ParamVisibility.Voluntary));
 
-                number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_timeShift_", NickName = "_timeShift_", Description = "Time Shift in minutes to be added/deducted from hour of the year", Access = GH_ParamAccess.item };
-                number.SetPersistentData(0);
-                result.Add(new GH_SAMParam(number, ParamVisibility.Voluntary));
+                number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_timeShift_", NickName = "_timeShift_", Description = "Time Shift in minutes to be added/deducted from hour of the year\n Default value -30min to align with Tas EDSL", Access = GH_ParamAccess.item };
+                number.SetPersistentData(-30);
+                result.Add(new GH_SAMParam(number, ParamVisibility.Binding));
 
                 global::Grasshopper.Kernel.Parameters.Param_Boolean boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
                 boolean.SetPersistentData(false);
@@ -186,7 +186,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
                 if(timeShift != 0)
                 {
-                    dateTime.AddMinutes(timeShift);
+                    dateTime = dateTime.AddMinutes(timeShift);
                 }
 
                 dateTimes.Add(dateTime);
