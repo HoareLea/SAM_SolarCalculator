@@ -34,36 +34,37 @@ namespace SAM.Geometry.SolarCalculator
             Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>>();
 
             List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, directionDictionary.Count()).ToList();
-            //Parallel.For(0, directionDictionary.Count(), (int i) =>
-            for (int i = 0; i < directionDictionary.Count(); i++)
+            Parallel.For(0, directionDictionary.Count(), (int i) =>
+            //for (int i = 0; i < directionDictionary.Count(); i++)
             {
                 DateTime dateTime = directionDictionary.Keys.ElementAt(i);
 
                 Vector3D sunDirection = directionDictionary[dateTime];
                 if (sunDirection == null || !sunDirection.IsValid())
                 {
-                    //return;
-                    continue;
+                    return;
+                    //continue;
                 }
 
                 if (sunDirection.Z > 0)
                 {
-                    //return;
-                    continue;
+                    return;
+                    //continue;
                 }
 
+                //The 9th Hour is the position of the sun at 8:30 am.The sun rises at 8:11am.That time the sun will be on the horizon.We have a hedge so the sun needs to be above the hedge(just like a hedgerow) for it to be seen.So the sun should be above the horizon by 0.1 degrees.
                 double angle = Plane.WorldXY.Project(sunDirection).SmallestAngle(sunDirection);
-                if(angle < 0.00174533)
+                if (angle < 0.04)// 0.1 radians
                 {
-                    //return;
-                    continue;
+                    return;
+                    //continue;
                 }
 
-                List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+                List <LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
                 if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
-                    //return;
-                    continue;
+                    return;
+                    //continue;
                 }
 
                 List<LinkedFace3D> LinkedFace3Ds_DateTime = new List<LinkedFace3D>();
@@ -117,7 +118,7 @@ namespace SAM.Geometry.SolarCalculator
                 }
 
                 tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
-            }//);
+            });
 
             foreach (LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
