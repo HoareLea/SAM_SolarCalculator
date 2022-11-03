@@ -8,7 +8,7 @@ namespace SAM.Geometry.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, Dictionary<DateTime, Vector3D> directionDictionary, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, Dictionary<DateTime, Vector3D> directionDictionary, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if (solarModel == null || directionDictionary == null)
             {
@@ -54,7 +54,7 @@ namespace SAM.Geometry.SolarCalculator
 
                 //The 9th Hour is the position of the sun at 8:30 am.The sun rises at 8:11am.That time the sun will be on the horizon.We have a hedge so the sun needs to be above the hedge(just like a hedgerow) for it to be seen.So the sun should be above the horizon by 0.1 degrees.
                 double angle = Plane.WorldXY.Project(sunDirection).SmallestAngle(sunDirection);
-                if (angle < 0.04)// 0.1 radians
+                if (angle < minHorizonAngle)// 0.1 radians
                 {
                     return;
                     //continue;
@@ -152,7 +152,7 @@ namespace SAM.Geometry.SolarCalculator
         }
 
 
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(solarModel == null || dateTimes == null)
             {
@@ -172,7 +172,7 @@ namespace SAM.Geometry.SolarCalculator
                 directionDictionary[dateTime] = Query.SunDirection(location, dateTime, false);
             }
 
-            return Simulate(solarModel, directionDictionary, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            return Simulate(solarModel, directionDictionary, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
 
         /// <summary>
@@ -181,12 +181,13 @@ namespace SAM.Geometry.SolarCalculator
         /// <param name="solarModel"></param>
         /// <param name="year"></param>
         /// <param name="hoursOfYear">hours of the year. Values starting from 0 to 8760</param>
+        /// <param name="minHorizonAngle">Minimal Angle to Horizon</param>
         /// <param name="tolerance_Area"></param>
         /// <param name="tolerance_Snap"></param>
         /// <param name="tolerance_Angle"></param>
         /// <param name="tolerance_Distance"></param>
         /// <returns>SolarFaceSimulationResults</returns>
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if(solarModel == null || hoursOfYear == null)
             {
@@ -202,7 +203,7 @@ namespace SAM.Geometry.SolarCalculator
                 dateTimes.Add(dateTime);
             }
 
-            return Simulate(solarModel, dateTimes, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            return Simulate(solarModel, dateTimes, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
     }
 }

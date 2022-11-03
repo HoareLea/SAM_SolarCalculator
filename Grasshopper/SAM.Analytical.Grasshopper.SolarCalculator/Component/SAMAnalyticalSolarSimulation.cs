@@ -64,6 +64,10 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 number.SetPersistentData(-30);
                 result.Add(new GH_SAMParam(number, ParamVisibility.Binding));
 
+                number = new global::Grasshopper.Kernel.Parameters.Param_Number() { Name = "_minHorizonAngle_", NickName = "_minHorizonAngle_", Description = "Minimal Angle to Horizon", Access = GH_ParamAccess.item };
+                number.SetPersistentData(SAM.Core.Tolerance.Angle);
+                result.Add(new GH_SAMParam(number, ParamVisibility.Binding));
+
                 global::Grasshopper.Kernel.Parameters.Param_Boolean boolean = new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "_run", NickName = "_run", Description = "Run", Access = GH_ParamAccess.item };
                 boolean.SetPersistentData(false);
                 result.Add(new GH_SAMParam(boolean, ParamVisibility.Binding));
@@ -210,8 +214,19 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            index = Params.IndexOfInputParam("_minHorizonAngle_");
+            double minHorizonAngle = Core.Tolerance.Angle;
+            if (index != -1)
+            {
+                double minHorizonAngle_Temp = minHorizonAngle;
+                if (dataAccess.GetData(index, ref minHorizonAngle_Temp) && !double.IsNaN(minHorizonAngle_Temp))
+                {
+                    minHorizonAngle = minHorizonAngle_Temp;
+                }
+            }
+
             analyticalModel = new AnalyticalModel(analyticalModel);
-            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, dateTimes, tolerance_Angle: tolerance_Angle);
+            List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, dateTimes, minHorizonAngle: minHorizonAngle, tolerance_Angle: tolerance_Angle);
 
             index = Params.IndexOfOutputParam("analyticalModel");
             if (index != -1)
