@@ -59,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SolarCalculator">
-      <Version>3.0.6</Version>
+      <Version>3.2.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
