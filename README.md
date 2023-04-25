@@ -4,7 +4,7 @@
 
 **SAM** is part of SAM Toolkit that is designed to help engneers to create Analytical Model. Welcome and let's make the opensource journey continue. :handshake:
 
-`SAM_SolarCalculator` is a module of the Sustainable Analytical Model (SAM) software developed by [Hoare Lea](https://hoarelea.com/). It provides functionality for simulating solar radiation on building surfaces and generating energy models.
+`SAM_SolarCalculator` is a module of the Sustainable Analytical Model (SAM) software developed by [Michal Dengusiak](https://github.com/michaldengusiak) and [Jakub Ziolkowski](https://github.com/ZiolkowskiJakub). It provides functionality for simulating solar radiation on building surfaces and generating energy models.
 
 ## Features
 
