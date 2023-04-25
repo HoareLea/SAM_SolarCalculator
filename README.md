@@ -40,6 +40,9 @@ public static EnergyBase Simulate(this Space space, double solarReflectance, dou
 
 Examples of how to use `SAM_SolarCalculator` can be found in the [Examples](https://github.com/HoareLea/SAM_SolarCalculator/tree/master/Examples) directory. 
 
+## Contributing
+If you would like to contribute to SAM_SolarCalculator, please fork the repository and submit a pull request. Before submitting a pull request, please make sure that your code adheres to the coding standards and conventions used in the project.
+
 ## Licence ##
 
 SAM is free software licenced under GNU Lesser General Public Licence - [https://www.gnu.org/licenses/lgpl-3.0.html](https://www.gnu.org/licenses/lgpl-3.0.html)  
