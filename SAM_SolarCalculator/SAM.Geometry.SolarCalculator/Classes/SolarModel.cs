@@ -9,7 +9,7 @@ namespace SAM.Geometry.SolarCalculator
     public class SolarModel : SAMModel, ISolarObject
     {
         private Location location;
-        private RelationCluster relationCluster;
+        private SolarRelationCluster solarRelationCluster;
 
         public SolarModel(JObject jObject)
             : base(jObject)
@@ -41,12 +41,12 @@ namespace SAM.Geometry.SolarCalculator
                 return false;
             }
 
-            if (relationCluster == null)
-                relationCluster = new RelationCluster();
+            if (solarRelationCluster == null)
+                solarRelationCluster = new SolarRelationCluster();
 
             LinkedFace3D solarFace_Temp = new LinkedFace3D(linkedFace3D);
 
-            if (!relationCluster.AddObject(solarFace_Temp))
+            if (!solarRelationCluster.AddObject(solarFace_Temp))
             {
                 return false;
             }
@@ -61,12 +61,12 @@ namespace SAM.Geometry.SolarCalculator
                 return false;
             }
 
-            if (relationCluster == null)
+            if (solarRelationCluster == null)
             {
-                relationCluster = new RelationCluster();
+                solarRelationCluster = new SolarRelationCluster();
             }
 
-            bool result = relationCluster.AddObject(solarFaceSimulationResult);
+            bool result = solarRelationCluster.AddObject(solarFaceSimulationResult);
             if (!result)
             {
                 return result;
@@ -74,10 +74,10 @@ namespace SAM.Geometry.SolarCalculator
 
             if (linkedFace3DGuid != System.Guid.Empty)
             {
-                LinkedFace3D linkedFace3D = relationCluster.GetObject<LinkedFace3D>(linkedFace3DGuid);
+                LinkedFace3D linkedFace3D = solarRelationCluster.GetObject<LinkedFace3D>(linkedFace3DGuid);
                 if (linkedFace3D != null)
                 {
-                    relationCluster.AddRelation(solarFaceSimulationResult, linkedFace3D);
+                    solarRelationCluster.AddRelation(solarFaceSimulationResult, linkedFace3D);
                 }
             }
 
@@ -86,12 +86,12 @@ namespace SAM.Geometry.SolarCalculator
         
         public List<LinkedFace3D> GetLinkedFace3Ds()
         {
-            return relationCluster?.GetObjects<LinkedFace3D>()?.ConvertAll(x => x == null ? null : new LinkedFace3D(x));
+            return solarRelationCluster?.GetObjects<LinkedFace3D>()?.ConvertAll(x => x == null ? null : new LinkedFace3D(x));
         }
 
         public List<SolarFaceSimulationResult> GetSolarFaceSimulationResults()
         {
-            return relationCluster?.GetObjects<SolarFaceSimulationResult>()?.ConvertAll(x => x == null ? null : new SolarFaceSimulationResult(x));
+            return solarRelationCluster?.GetObjects<SolarFaceSimulationResult>()?.ConvertAll(x => x == null ? null : new SolarFaceSimulationResult(x));
         }
 
         public override bool FromJObject(JObject jObject)
@@ -102,8 +102,8 @@ namespace SAM.Geometry.SolarCalculator
             if (jObject.ContainsKey("Location"))
                 location = new Location(jObject.Value<JObject>("Location"));
 
-            if (jObject.ContainsKey("RelationCluster"))
-                relationCluster = new RelationCluster(jObject.Value<JObject>("RelationCluster"));
+            if (jObject.ContainsKey("SolarRelationCluster"))
+                solarRelationCluster = new SolarRelationCluster(jObject.Value<JObject>("SolarRelationCluster"));
 
             return true;
         }
@@ -117,8 +117,8 @@ namespace SAM.Geometry.SolarCalculator
             if (location != null)
                 jObject.Add("Location", location.ToJObject());
 
-            if (relationCluster != null)
-                jObject.Add("RelationCluster", relationCluster.ToJObject());
+            if (solarRelationCluster != null)
+                jObject.Add("SolarRelationCluster", solarRelationCluster.ToJObject());
 
             return jObject;
         }

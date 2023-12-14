@@ -135,7 +135,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
             }
-            
+
             SolarFaceSimulationResult solarFaceSimulationResult = analyticalModel.GetResults<SolarFaceSimulationResult>(panel)?.FirstOrDefault();
             if(solarFaceSimulationResult == null)
             {
