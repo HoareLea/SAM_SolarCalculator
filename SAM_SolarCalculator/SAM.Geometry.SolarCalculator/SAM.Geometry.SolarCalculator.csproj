@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="Classes\SolarModel.cs" />
     <Compile Include="Classes\SolarFaceSimulationResult.cs" />
+    <Compile Include="Classes\SolarRelationCluster.cs" />
     <Compile Include="Create\SolarFaceSimulationResult.cs" />
     <Compile Include="Modify\Merge.cs" />
     <Compile Include="Modify\Simulate.cs" />
