@@ -1,4 +1,5 @@
-﻿using SAM.Geometry.SolarCalculator;
+﻿using SAM.Geometry.Object.Spatial;
+using SAM.Geometry.SolarCalculator;
 using SAM.Geometry.Spatial;
 using System.Collections.Generic;
 
@@ -74,7 +75,7 @@ namespace SAM.Analytical.SolarCalculator
                         }
                     }
 
-                    LinkedFace3D linkedFace3D = Geometry.Spatial.Create.LinkedFace3D(partition);
+                    LinkedFace3D linkedFace3D = Geometry.Object.Spatial.Create.LinkedFace3D(partition);
                     if(linkedFace3D == null)
                     {
                         continue;

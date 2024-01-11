@@ -1,4 +1,5 @@
-﻿using SAM.Geometry.Spatial;
+﻿using SAM.Geometry.Object.Spatial;
+using SAM.Geometry.Spatial;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace SAM.Geometry.SolarCalculator
                     //continue;
                 }
 
-                List <LinkedFace3D> linkedFace3Ds_ExposedToSun = Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+                List <LinkedFace3D> linkedFace3Ds_ExposedToSun = Object.Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
                 if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
                     return;

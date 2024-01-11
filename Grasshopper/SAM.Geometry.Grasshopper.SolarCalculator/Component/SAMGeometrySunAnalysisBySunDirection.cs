@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Grasshopper.Kernel.Types;
 using SAM.Geometry.Spatial;
+using SAM.Geometry.Object.Spatial;
 
 namespace SAM.Geometry.Grasshopper.SolarCalculator
 {
@@ -139,7 +140,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            Spatial.Query.ViewField(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d), out List<LinkedFace3D> linkedFace3Ds_Shaded, out List<LinkedFace3D> linkedFace3Ds_ExposedToSun, shaded, exposedToSun);
+            Object.Spatial.Query.ViewField(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d), out List<LinkedFace3D> linkedFace3Ds_Shaded, out List<LinkedFace3D> linkedFace3Ds_ExposedToSun, shaded, exposedToSun);
 
             index = Params.IndexOfOutputParam("shaded");
             if (index != -1)

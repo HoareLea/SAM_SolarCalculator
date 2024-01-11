@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Grasshopper.Kernel.Types;
 using SAM.Geometry.Spatial;
+using SAM.Geometry.Object.Spatial;
 
 namespace SAM.Geometry.Grasshopper.SolarCalculator
 {
@@ -97,7 +98,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
                 return;
             }
 
-            List<LinkedFace3D> linkedFace3Ds_Result = Spatial.Query.HiddenLinkedFace3Ds(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d));
+            List<LinkedFace3D> linkedFace3Ds_Result = Object.Spatial.Query.HiddenLinkedFace3Ds(linkedFace3Ds, Rhino.Convert.ToSAM(vector3d));
 
             index = Params.IndexOfOutputParam("shadings");
             if (index != -1)
