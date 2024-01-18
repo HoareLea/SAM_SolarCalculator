@@ -48,7 +48,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_year", NickName = "_year", Description = "year", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year (0-8760)", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
 
-                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "timeShift_", NickName = "timeShift_", Description = "Time Shift [min]", Access = GH_ParamAccess.list, Optional = true}, ParamVisibility.Voluntary));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "timeShift_", NickName = "timeShift_", Description = "Time Shift [min]", Access = GH_ParamAccess.item, Optional = true}, ParamVisibility.Voluntary));
 
                 return result.ToArray();
             }
