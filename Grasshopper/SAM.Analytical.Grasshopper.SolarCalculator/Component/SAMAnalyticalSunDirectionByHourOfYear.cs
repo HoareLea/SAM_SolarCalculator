@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.2";
+        public override string LatestComponentVersion => "1.0.3";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -63,6 +63,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             {
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Vector() { Name = "vectors", NickName = "vectors", Description = "Rhino Vectors", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Time() { Name = "dateTimes", NickName = "dateTimes", Description = "DateTimes", Access = GH_ParamAccess.list }, ParamVisibility.Voluntary));
                 return result.ToArray();
             }
         }
@@ -109,11 +110,14 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 minutes = 0;
             }
 
+            List<DateTime> dateTimes = new List<DateTime>();
             List<Rhino.Geometry.Vector3d> vectors = new List<Rhino.Geometry.Vector3d>();
             foreach(int hourOfYear in hoursOfYear)
             {
                 DateTime dateTime = new DateTime(year, 1, 1).AddHours(hourOfYear).AddMinutes(minutes);
-                
+
+                dateTimes.Add(dateTime);
+
                 Vector3D vector3D = Analytical.SolarCalculator.Query.SunDirection(analyticalModel, dateTime);
                 if(vector3D != null)
                 {
@@ -123,7 +127,15 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
             index = Params.IndexOfOutputParam("vectors");
             if (index != -1)
+            {
                 dataAccess.SetDataList(index, vectors);
+            }
+
+            index = Params.IndexOfOutputParam("dateTimes");
+            if (index != -1)
+            {
+                dataAccess.SetDataList(index, dateTimes);
+            }
         }
     }
 }

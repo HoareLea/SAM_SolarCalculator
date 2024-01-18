@@ -1,6 +1,7 @@
 ﻿using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using SAM.Analytical.Grasshopper.SolarCalculator.Properties;
+using SAM.Core;
 using SAM.Core.Grasshopper;
 using System;
 using System.Collections.Generic;
@@ -86,6 +87,10 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 List<GH_SAMParam> result = new List<GH_SAMParam>();
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "analyticalModel", NickName = "analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new GooResultParam() { Name = "solarFaceSimulationResults", NickName = "solarFaceSimulationResults", Description = "SAM Analytical Model", Access = GH_ParamAccess.list }, ParamVisibility.Voluntary));
+
+                global::Grasshopper.Kernel.Parameters.Param_Integer integer = new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "hoursOfYear", NickName = "hoursOfYear", Description = "Hours Of Year", Access = GH_ParamAccess.list };
+                result.Add(new GH_SAMParam(integer, ParamVisibility.Binding));
+
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Boolean() { Name = "successful", NickName = "successful", Description = "Successful?", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 return result.ToArray();
             }
@@ -227,6 +232,14 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
             analyticalModel = new AnalyticalModel(analyticalModel);
             List<Geometry.SolarCalculator.SolarFaceSimulationResult> solarFaceSimulationResults = Analytical.SolarCalculator.Modify.Simulate(analyticalModel, dateTimes, minHorizonAngle: minHorizonAngle, tolerance_Angle: tolerance_Angle);
+
+            
+            index = Params.IndexOfOutputParam("hoursOfYear");
+            if (index != -1)
+            {
+                dataAccess.SetDataList(index, dateTimes?.ConvertAll(x => x.HourOfYear()));
+            }
+
 
             index = Params.IndexOfOutputParam("analyticalModel");
             if (index != -1)
