@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.1";
+        public override string LatestComponentVersion => "1.0.2";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -47,6 +47,8 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 result.Add(new GH_SAMParam(new GooAnalyticalModelParam() { Name = "_analyticalModel", NickName = "_analyticalModel", Description = "SAM Analytical Model", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_year", NickName = "_year", Description = "year", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
                 result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "_hoursOfYear", NickName = "_hoursOfYear", Description = "Hours Of Year (0-8760)", Access = GH_ParamAccess.list }, ParamVisibility.Binding));
+
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_Integer() { Name = "timeShift_", NickName = "timeShift_", Description = "Time Shift [min]", Access = GH_ParamAccess.list, Optional = true}, ParamVisibility.Voluntary));
 
                 return result.ToArray();
             }
@@ -100,11 +102,17 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 return;
             }
 
+            index = Params.IndexOfInputParam("timeShift_");
+            int minutes = 0;
+            if (index == -1 || !dataAccess.GetData(index, ref minutes))
+            {
+                minutes = 0;
+            }
 
             List<Rhino.Geometry.Vector3d> vectors = new List<Rhino.Geometry.Vector3d>();
             foreach(int hourOfYear in hoursOfYear)
             {
-                DateTime dateTime = new DateTime(year, 1, 1).AddHours(hourOfYear);
+                DateTime dateTime = new DateTime(year, 1, 1).AddHours(hourOfYear).AddMinutes(minutes);
                 
                 Vector3D vector3D = Analytical.SolarCalculator.Query.SunDirection(analyticalModel, dateTime);
                 if(vector3D != null)
