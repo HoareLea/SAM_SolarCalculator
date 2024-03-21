@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.3";
+        public override string LatestComponentVersion => "1.0.4";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -32,7 +32,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         public SAMAnalyticalSunDirectionByHourOfYear()
           : base("SAMAnalytical.SunDirectionByHourOfYear", "SAMAnalytical.SunDirectionByHourOfYear",
               "Sun Direction by hour of year for AnalyticalModel",
-              "SAM WIP", "Solar")
+              "SAM", "Solar")
         {
         }
 

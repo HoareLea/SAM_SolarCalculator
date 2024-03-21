@@ -19,7 +19,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.2";
+        public override string LatestComponentVersion => "1.0.3";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -34,7 +34,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         public SAMGeometrySunExposure()
           : base("SAMGeometry.SunExposure", "SAMGeometry.SunExposure",
               "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results display to specific items  ",
-              "SAM WIP", "Solar")
+              "SAM", "Solar")
         {
         }
 

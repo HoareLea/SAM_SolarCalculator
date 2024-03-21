@@ -19,7 +19,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.0";
+        public override string LatestComponentVersion => "1.0.1";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -34,7 +34,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
         public SAMGeometrySunAnalysisBySunDirection()
           : base("SAMGeometry.SunAnalysisBySunDirection", "SAMGeometry.SunAnalysisBySunDirection",
               "Sun Analysis by Sun Direction",
-              "SAM WIP", "Solar")
+              "SAM", "Solar")
         {
         }
 

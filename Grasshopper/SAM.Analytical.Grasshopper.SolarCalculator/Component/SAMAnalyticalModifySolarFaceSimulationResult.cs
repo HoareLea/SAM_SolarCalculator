@@ -17,7 +17,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.1";
+        public override string LatestComponentVersion => "1.0.2";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -32,7 +32,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         public SAMAnalyticalModifySolarFaceSimulationResult()
           : base("SAMAnalytical.ModifySolarFaceSimulationResult", "SAMAnalytical.ModifySolarFaceSimulationResult",
               "This node modify Shading data for Panel",
-              "SAM WIP", "Solar")
+              "SAM", "Solar")
         {
         }
 
