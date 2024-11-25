@@ -44,7 +44,7 @@ namespace SAM.Analytical.SolarCalculator
 
             List<SolarFaceSimulationResult> result = null;
 
-            List<SolarFaceSimulationResult> solarFaceSimulationResults = solarModel.Simulate(directionDictionary, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            List<SolarFaceSimulationResult> solarFaceSimulationResults = Weather.SolarCalculator.Modify.Simulate(solarModel, directionDictionary, true, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
             if (solarFaceSimulationResults != null && solarFaceSimulationResults.Count != 0)
             {
                 result = new List<SolarFaceSimulationResult>();
@@ -105,7 +105,7 @@ namespace SAM.Analytical.SolarCalculator
                 return null;
             }
 
-            List<SolarFaceSimulationResult> result = solarModel.Simulate(dateTimes, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            List<SolarFaceSimulationResult> result = Weather.SolarCalculator.Modify.Simulate(solarModel, dateTimes, true ,minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
             if (result != null && result.Count != 0)
             {
                 List<IPartition> partitions = buildingModel.GetPartitions();

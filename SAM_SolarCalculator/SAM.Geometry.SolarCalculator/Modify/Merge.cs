@@ -1,12 +1,10 @@
 ﻿using SAM.Geometry.Spatial;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SAM.Geometry.SolarCalculator
 {
-    public static partial class Query
+    public static partial class Modify
     {
         public static SolarFaceSimulationResult Merge(this SolarFaceSimulationResult solarFaceSimulationResult_1, SolarFaceSimulationResult solarFaceSimulationResult_2)
         {
@@ -15,7 +13,7 @@ namespace SAM.Geometry.SolarCalculator
                 return null;
             }
 
-            Dictionary<DateTime, List<Face3D>> sunExposure = new Dictionary<DateTime, List<Face3D>>();
+            Dictionary<DateTime, Tuple<Radiation, List<Face3D>>> sunExposure = new Dictionary<DateTime, Tuple<Radiation, List<Face3D>>>();
             
             List<DateTime> dateTimes = null;
 
@@ -24,7 +22,7 @@ namespace SAM.Geometry.SolarCalculator
             {
                 foreach(DateTime dateTime in dateTimes)
                 {
-                    sunExposure[dateTime] = solarFaceSimulationResult_1.GetSunExposureFace3Ds(dateTime);
+                    sunExposure[dateTime] = new Tuple<Radiation, List<Face3D>>(solarFaceSimulationResult_1.GetRadiation(dateTime), solarFaceSimulationResult_1.GetSunExposureFace3Ds(dateTime));
                 }
             }
 
@@ -33,7 +31,7 @@ namespace SAM.Geometry.SolarCalculator
             {
                 foreach (DateTime dateTime in dateTimes)
                 {
-                    sunExposure[dateTime] = solarFaceSimulationResult_2.GetSunExposureFace3Ds(dateTime);
+                    sunExposure[dateTime] = new Tuple<Radiation, List<Face3D>>(solarFaceSimulationResult_2.GetRadiation(dateTime), solarFaceSimulationResult_2.GetSunExposureFace3Ds(dateTime));
                 }
             }
 
