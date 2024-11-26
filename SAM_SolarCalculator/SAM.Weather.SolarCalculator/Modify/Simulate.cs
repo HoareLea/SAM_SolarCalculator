@@ -37,7 +37,7 @@ namespace SAM.Weather.SolarCalculator
 
             Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>> dictionary = new Dictionary<LinkedFace3D, List<Tuple<DateTime, Face3D>>>();
 
-            List<Tuple<DateTime, Radiation, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, Radiation, List<LinkedFace3D>>>(null, directionDictionary.Count()).ToList();
+            List<Tuple<DateTime, List<LinkedFace3D>>> tuples = Enumerable.Repeat<Tuple<DateTime, List<LinkedFace3D>>>(null, directionDictionary.Count()).ToList();
             Parallel.For(0, directionDictionary.Count(), (int i) =>
             //for (int i = 0; i < directionDictionary.Count(); i++)
             {
@@ -118,30 +118,33 @@ namespace SAM.Weather.SolarCalculator
                             LinkedFace3Ds_DateTime.Add(new LinkedFace3D(linkedFace3D_SolarModel.Guid, plane_SolarModel.Project(face3D)));
                         }
                     }
-
                 }
 
-                Radiation radiation = null;
-                if(weatherData != null)
-                {
-                    radiation = Create.Radiation(weatherData, dateTime);
-                }
-
-                tuples[i] = new Tuple<DateTime, Radiation, List<LinkedFace3D>>(dateTime, radiation, LinkedFace3Ds_DateTime);
+                tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
             });
 
             foreach (LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
                 List<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure = new List<Tuple<DateTime, Radiation, List<Face3D>>>();
-                foreach (Tuple<DateTime, Radiation, List<LinkedFace3D>> tuple in tuples)
+                foreach (Tuple<DateTime, List<LinkedFace3D>> tuple in tuples)
                 {
-                    List<LinkedFace3D> linkedFace3Ds_Tuple = tuple?.Item3?.FindAll(x => x.Guid == linkedFace3D.Guid);
+                    List<LinkedFace3D> linkedFace3Ds_Tuple = tuple?.Item2?.FindAll(x => x.Guid == linkedFace3D.Guid);
                     if (linkedFace3Ds_Tuple == null || linkedFace3Ds_Tuple.Count == 0)
                     {
                         continue;
                     }
 
-                    sunExposure.Add(new Tuple<DateTime, Radiation, List<Face3D>>(tuple.Item1, tuple.Item2, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
+                    Radiation radiation = null;
+                    if (weatherData != null)
+                    {
+                        Plane plane = linkedFace3Ds_Tuple[0]?.Face3D?.GetPlane();
+                        if (plane != null)
+                        {
+                            radiation = Create.Radiation(weatherData, tuple.Item1, plane);
+                        }
+                    }
+
+                    sunExposure.Add(new Tuple<DateTime, Radiation, List<Face3D>>(tuple.Item1, radiation, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
                 }
 
                 if (sunExposure == null || sunExposure.Count == 0)
