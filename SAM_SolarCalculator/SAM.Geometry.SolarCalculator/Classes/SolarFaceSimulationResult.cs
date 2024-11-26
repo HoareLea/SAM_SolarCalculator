@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using SAM.Core;
 using SAM.Core.SolarCalculator;
+using SAM.Geometry.Spatial;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,13 @@ namespace SAM.Geometry.SolarCalculator
 {
     public class SolarFaceSimulationResult : Result, ISolarObject
     {
+        private Face3D face3D;
         private List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>> sunExposure;
 
-        public SolarFaceSimulationResult(string name, string source, string reference, IEnumerable<Tuple<DateTime, Radiation, List<Spatial.Face3D>>> sunExposure)
+        public SolarFaceSimulationResult(string name, string source, string reference, Face3D face3D, IEnumerable<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure)
             : base(name, source, reference)
         {
+            this.face3D = face3D?.Clone<Face3D>();
             if(sunExposure != null)
             {
                 this.sunExposure = new List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>>();
@@ -27,9 +30,11 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public SolarFaceSimulationResult(SolarFaceSimulationResult solarFaceSimulationResult, IEnumerable<Tuple<DateTime, Radiation, List<Spatial.Face3D>>> sunExposure)
+        public SolarFaceSimulationResult(SolarFaceSimulationResult solarFaceSimulationResult, IEnumerable<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure)
         : base(solarFaceSimulationResult)
         {
+            face3D = solarFaceSimulationResult?.face3D?.Clone<Face3D>();
+
             if (sunExposure != null)
             {
                 this.sunExposure = new List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>>();
@@ -40,9 +45,10 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public SolarFaceSimulationResult(SolarFaceSimulationResult solarFaceSimulationResult, Dictionary<DateTime, Tuple<Radiation, List<Spatial.Face3D>>> sunExposure)
+        public SolarFaceSimulationResult(SolarFaceSimulationResult solarFaceSimulationResult, Dictionary<DateTime, Tuple<Radiation, List<Face3D>>> sunExposure)
             : base(solarFaceSimulationResult)
         {
+            face3D = solarFaceSimulationResult?.face3D?.Clone<Face3D>();
             if (sunExposure != null)
             {
                 this.sunExposure = new List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>>();
@@ -66,6 +72,8 @@ namespace SAM.Geometry.SolarCalculator
                 return;
             }
 
+            face3D = solarFaceSimulationResult.face3D?.Clone<Face3D>();
+
             if(solarFaceSimulationResult.sunExposure != null)
             {
                 sunExposure = new List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>>();
@@ -84,6 +92,8 @@ namespace SAM.Geometry.SolarCalculator
                 return;
             }
 
+            face3D = solarFaceSimulationResult.face3D?.Clone<Face3D>();
+
             if (solarFaceSimulationResult.sunExposure != null)
             {
                 sunExposure = new List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>>();
@@ -99,15 +109,15 @@ namespace SAM.Geometry.SolarCalculator
             }
         }
 
-        public List<Spatial.Face3D> GetSunExposureFace3Ds(DateTime dateTime)
+        public List<Face3D> GetSunExposureFace3Ds(DateTime dateTime)
         {
             if(sunExposure == null)
             {
                 return null;
             }
 
-            Tuple<DateTime, Radiation, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
-            return tuple?.Item3?.ConvertAll(x => new Spatial.Face3D(x));
+            Tuple<DateTime, Radiation, List<Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
+            return tuple?.Item3?.ConvertAll(x => new Face3D(x));
         }
 
         public Radiation GetRadiation(DateTime dateTime)
@@ -117,7 +127,7 @@ namespace SAM.Geometry.SolarCalculator
                 return null;
             }
 
-            Tuple<DateTime, Radiation, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
+            Tuple<DateTime, Radiation, List<Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
             return tuple?.Item2?.Clone();
         }
 
@@ -128,13 +138,21 @@ namespace SAM.Geometry.SolarCalculator
                 return 0;
             }
 
-            Tuple<DateTime, Radiation, List<Spatial.Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
+            Tuple<DateTime, Radiation, List<Face3D>> tuple = sunExposure.Find(x => x.Item1.Equals(dateTime));
             if(tuple == null || tuple.Item2 == null || tuple.Item3.Count == 0)
             {
                 return 0;
             }
 
             return tuple.Item3.ConvertAll(x => x.GetArea()).Sum();
+        }
+
+        public Face3D Face3D
+        {
+            get
+            {
+                return face3D?.Clone<Face3D>();
+            }
         }
 
         public List<DateTime> DateTimes
@@ -160,9 +178,38 @@ namespace SAM.Geometry.SolarCalculator
                 }
 
                 List<double> result = new List<double>();
-                foreach(Tuple<DateTime, Radiation, List<Spatial.Face3D>> tuple in sunExposure)
+                foreach(Tuple<DateTime, Radiation, List<Face3D>> tuple in sunExposure)
                 {
                     result.Add(tuple.Item2 == null ? double.NaN : tuple.Item2.GetTotal());
+                }
+
+                return result;
+            }
+        }
+
+        public List<double> IncidentRadiations
+        {
+            get
+            {
+                if (sunExposure == null || face3D == null || sunExposure == null)
+                {
+                    return null;
+                }
+
+                double area = face3D.GetArea();
+                if(double.IsNaN(area) || area == 0)
+                {
+                    return null;
+                }
+
+                List<double> result = new List<double>();
+                foreach (Tuple<DateTime, Radiation, List<Face3D>> tuple in sunExposure)
+                {
+                    double radiation = tuple.Item2 == null ? double.NaN : tuple.Item2.GetTotal();
+
+                    double sunExposureArea = GetSunExposureArea(tuple.Item1);
+
+                    result.Add(radiation * sunExposureArea / area);
                 }
 
                 return result;
