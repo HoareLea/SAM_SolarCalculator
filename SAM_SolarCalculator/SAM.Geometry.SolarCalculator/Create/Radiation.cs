@@ -39,8 +39,8 @@ namespace SAM.Geometry.SolarCalculator
             }
 
             // 1. Get solar position
-            double solarElevation = System.Convert.ToDouble(angle_SolarElevation.Radians);
-            double solarAzimuth = System.Convert.ToDouble(angle_SolarAzimuth.Radians) + (Math.PI / 2);
+            double solarElevation = Convert.ToDouble(angle_SolarElevation.Radians);
+            double solarAzimuth = (Convert.ToDouble(angle_SolarAzimuth.Radians) + (Math.PI / 2)) * 180 / Math.PI;
 
             // 2. Calculate angle of incidence
             double cosThetaI = Math.Sin(solarElevation) * Math.Cos(tilt * Math.PI / 180) +
