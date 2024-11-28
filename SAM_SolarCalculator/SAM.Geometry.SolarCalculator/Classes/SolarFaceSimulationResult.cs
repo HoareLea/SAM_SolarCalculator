@@ -11,7 +11,7 @@ namespace SAM.Geometry.SolarCalculator
     public class SolarFaceSimulationResult : Result, ISolarObject
     {
         private Face3D face3D;
-        private List<Tuple<DateTime, Radiation, List<Spatial.Face3D>>> sunExposure;
+        private List<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure;
 
         public SolarFaceSimulationResult(string name, string source, string reference, Face3D face3D, IEnumerable<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure)
             : base(name, source, reference)

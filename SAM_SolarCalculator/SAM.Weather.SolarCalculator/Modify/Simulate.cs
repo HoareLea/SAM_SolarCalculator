@@ -152,7 +152,7 @@ namespace SAM.Weather.SolarCalculator
                     continue;
                 }
 
-                SolarFaceSimulationResult solarFaceSimulationResult = SAM.Geometry.SolarCalculator.Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
+                SolarFaceSimulationResult solarFaceSimulationResult = Geometry.SolarCalculator.Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
                 if (solarFaceSimulationResult == null)
                 {
                     continue;

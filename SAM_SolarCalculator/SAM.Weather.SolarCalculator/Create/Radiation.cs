@@ -38,29 +38,26 @@ namespace SAM.Weather.SolarCalculator
                 return null;
             }
 
-            DateTime dateTime_Temp = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, 0, 0);
-
-            Dictionary<DateTime, double> dictionary_GlobalSolarRadiation = weatherData.Values(WeatherDataType.GlobalSolarRadiation);
-            if (dictionary_GlobalSolarRadiation == null || !dictionary_GlobalSolarRadiation.TryGetValue(dateTime_Temp, out double globalSolarRadiation))
+            WeatherHour weatherHour = weatherData.GetWeatherHour(dateTime);
+            if(weatherHour == null)
             {
                 return null;
             }
 
-            Dictionary<DateTime, double> dictionary_DiffuseSolarRadiation = weatherData.Values(WeatherDataType.DiffuseSolarRadiation);
-            if (dictionary_DiffuseSolarRadiation == null || !dictionary_DiffuseSolarRadiation.TryGetValue(dateTime_Temp, out double diffuseSolarRadiation))
+            double directSolarRadiation = weatherHour.CalculatedDirectSolarRadiation();
+            if(double.IsNaN(directSolarRadiation))
             {
                 return null;
             }
 
-
-            Dictionary<DateTime, double> dictionary_DirectSolarRadiation = weatherData.Values(WeatherDataType.DirectSolarRadiation);
-            if (dictionary_DirectSolarRadiation == null || !dictionary_DirectSolarRadiation.TryGetValue(dateTime_Temp, out double directSolarRadiation))
+            double diffuseSolarRadiation = weatherHour.CalculatedDiffuseSolarRadiation();
+            if (double.IsNaN(diffuseSolarRadiation))
             {
-                dictionary_DirectSolarRadiation = new Dictionary<DateTime, double>();
-                dictionary_DirectSolarRadiation[dateTime_Temp] = globalSolarRadiation - diffuseSolarRadiation;
+                return null;
             }
 
-            if (dictionary_DirectSolarRadiation == null || !dictionary_DirectSolarRadiation.TryGetValue(dateTime_Temp, out directSolarRadiation))
+            double globalSolarRadiation = weatherHour.CalculatedGlobalSolarRadiation();
+            if (double.IsNaN(globalSolarRadiation))
             {
                 return null;
             }
