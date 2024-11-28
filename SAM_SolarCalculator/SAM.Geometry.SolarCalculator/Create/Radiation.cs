@@ -38,19 +38,21 @@ namespace SAM.Geometry.SolarCalculator
                 return null;
             }
 
+            double tilt_Temp = 180 - tilt;
+
             // 1. Get solar position
             double solarElevation = Convert.ToDouble(angle_SolarElevation.Radians);
             double solarAzimuth = (Convert.ToDouble(angle_SolarAzimuth.Radians) + (Math.PI / 2)) * 180 / Math.PI;
 
             // 2. Calculate angle of incidence
-            double cosThetaI = Math.Sin(solarElevation) * Math.Cos(tilt * Math.PI / 180) +
-                               Math.Cos(solarElevation) * Math.Sin(tilt * Math.PI / 180) *
+            double cosThetaI = Math.Sin(solarElevation) * Math.Cos(tilt_Temp * Math.PI / 180) +
+                               Math.Cos(solarElevation) * Math.Sin(tilt_Temp * Math.PI / 180) *
                                Math.Cos((solarAzimuth - surfaceAzimuth) * Math.PI / 180);
 
             // 3. Calculate direct, diffuse, and reflected radiation
             double directNormalRadiance = directNormalIrradiance * Math.Max(0, cosThetaI);
-            double diffuseHorizontalRadiance = diffuseHorizontalIrradiance * skyViewFactor;  // Assume skyViewFactor is predefined
-            double globalHorizontalRadiance = globalHorizontalIrradiance * albedo * groundViewFactor;  // Assume albedo is predefined
+            double diffuseHorizontalRadiance = diffuseHorizontalIrradiance * skyViewFactor * Math.Pow(Math.Cos(tilt_Temp * Math.PI / 360), 2); // Assume skyViewFactor is predefined
+            double globalHorizontalRadiance = globalHorizontalIrradiance * albedo * groundViewFactor * Math.Pow(Math.Sin(tilt_Temp * Math.PI / 360), 2); // Assume albedo is predefined
 
             // 4. Total incident radiation
             //double I_total = I_direct + I_diffuse + I_reflected;
