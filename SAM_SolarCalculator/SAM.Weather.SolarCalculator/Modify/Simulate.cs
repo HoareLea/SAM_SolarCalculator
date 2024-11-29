@@ -1,15 +1,16 @@
 ﻿using SAM.Geometry.Object.Spatial;
+using SAM.Geometry.SolarCalculator;
 using SAM.Geometry.Spatial;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SAM.Geometry.SolarCalculator
+namespace SAM.Weather.SolarCalculator
 {
     public static partial class Modify
     {
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, Dictionary<DateTime, Vector3D> directionDictionary, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, Dictionary<DateTime, Vector3D> directionDictionary, bool calctulateRadiation, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
             if (solarModel == null || directionDictionary == null)
             {
@@ -24,11 +25,13 @@ namespace SAM.Geometry.SolarCalculator
                 return null;
             }
 
-            Dictionary<LinkedFace3D, List<LinkedFace3D>> dictionary_Merge = Query.Merge(LinkedFace3Ds, tolerance_Snap, tolerance_Area, tolerance_Distance);
+            Dictionary<LinkedFace3D, List<LinkedFace3D>> dictionary_Merge = Geometry.SolarCalculator.Query.Merge(LinkedFace3Ds, tolerance_Snap, tolerance_Area, tolerance_Distance);
             if (dictionary_Merge == null)
             {
                 return null;
             }
+
+            WeatherData weatherData = !calctulateRadiation ? null : solarModel.GetValue<WeatherData>(SolarModelParameter.WeatherData);
 
             List<LinkedFace3D> LinkedFace3Ds_Merge = new List<LinkedFace3D>(dictionary_Merge.Keys);
 
@@ -61,7 +64,7 @@ namespace SAM.Geometry.SolarCalculator
                     //continue;
                 }
 
-                List <LinkedFace3D> linkedFace3Ds_ExposedToSun = Object.Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+                List<LinkedFace3D> linkedFace3Ds_ExposedToSun = Geometry.Object.Spatial.Query.VisibleLinkedFace3Ds(LinkedFace3Ds_Merge, sunDirection, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
                 if (linkedFace3Ds_ExposedToSun == null || linkedFace3Ds_ExposedToSun.Count == 0)
                 {
                     return;
@@ -84,7 +87,7 @@ namespace SAM.Geometry.SolarCalculator
 
                     Face3D face3D_ExposedToSun = linkedFace3D_ExposedToSun.Face3D;
                     Plane plane = face3D_ExposedToSun.GetPlane();
-                    Planar.Face2D face2D_ExposedToSun = plane.Convert(face3D_ExposedToSun);
+                    Geometry.Planar.Face2D face2D_ExposedToSun = plane.Convert(face3D_ExposedToSun);
 
                     foreach (LinkedFace3D linkedFace3D_SolarModel in solarFaces_SolarModel)
                     {
@@ -94,9 +97,9 @@ namespace SAM.Geometry.SolarCalculator
                             continue;
                         }
 
-                        Planar.Face2D face2D = plane.Convert(plane.Project(face3D_SolarModel));
+                        Geometry.Planar.Face2D face2D = plane.Convert(plane.Project(face3D_SolarModel));
 
-                        List<Planar.Face2D> face2Ds_Intersection = Planar.Query.Intersection(face2D, face2D_ExposedToSun, tolerance_Distance);
+                        List<Geometry.Planar.Face2D> face2Ds_Intersection = Geometry.Planar.Query.Intersection(face2D, face2D_ExposedToSun, tolerance_Distance);
                         if (face2Ds_Intersection == null || face2Ds_Intersection.Count == 0)
                         {
                             continue;
@@ -104,7 +107,7 @@ namespace SAM.Geometry.SolarCalculator
 
                         Plane plane_SolarModel = face3D_SolarModel.GetPlane();
 
-                        foreach (Planar.Face2D face2D_Intersection in face2Ds_Intersection)
+                        foreach (Geometry.Planar.Face2D face2D_Intersection in face2Ds_Intersection)
                         {
                             Face3D face3D = plane.Convert(face2D_Intersection);
                             if (face3D == null)
@@ -115,7 +118,6 @@ namespace SAM.Geometry.SolarCalculator
                             LinkedFace3Ds_DateTime.Add(new LinkedFace3D(linkedFace3D_SolarModel.Guid, plane_SolarModel.Project(face3D)));
                         }
                     }
-
                 }
 
                 tuples[i] = new Tuple<DateTime, List<LinkedFace3D>>(dateTime, LinkedFace3Ds_DateTime);
@@ -123,7 +125,7 @@ namespace SAM.Geometry.SolarCalculator
 
             foreach (LinkedFace3D linkedFace3D in LinkedFace3Ds)
             {
-                List<Tuple<DateTime, List<Face3D>>> sunExposure = new List<Tuple<DateTime, List<Face3D>>>();
+                List<Tuple<DateTime, Radiation, List<Face3D>>> sunExposure = new List<Tuple<DateTime, Radiation, List<Face3D>>>();
                 foreach (Tuple<DateTime, List<LinkedFace3D>> tuple in tuples)
                 {
                     List<LinkedFace3D> linkedFace3Ds_Tuple = tuple?.Item2?.FindAll(x => x.Guid == linkedFace3D.Guid);
@@ -132,7 +134,17 @@ namespace SAM.Geometry.SolarCalculator
                         continue;
                     }
 
-                    sunExposure.Add(new Tuple<DateTime, List<Face3D>>(tuple.Item1, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
+                    Radiation radiation = null;
+                    if (weatherData != null)
+                    {
+                        Plane plane = linkedFace3Ds_Tuple[0]?.Face3D?.GetPlane();
+                        if (plane != null)
+                        {
+                            radiation = Create.Radiation(weatherData, tuple.Item1, plane);
+                        }
+                    }
+
+                    sunExposure.Add(new Tuple<DateTime, Radiation, List<Face3D>>(tuple.Item1, radiation, linkedFace3Ds_Tuple.ConvertAll(x => x.Face3D)));
                 }
 
                 if (sunExposure == null || sunExposure.Count == 0)
@@ -140,7 +152,7 @@ namespace SAM.Geometry.SolarCalculator
                     continue;
                 }
 
-                SolarFaceSimulationResult solarFaceSimulationResult = Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
+                SolarFaceSimulationResult solarFaceSimulationResult = Geometry.SolarCalculator.Create.SolarFaceSimulationResult(linkedFace3D, sunExposure);
                 if (solarFaceSimulationResult == null)
                 {
                     continue;
@@ -153,27 +165,27 @@ namespace SAM.Geometry.SolarCalculator
         }
 
 
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, IEnumerable<DateTime> dateTimes, bool calctulateRadiation, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
-            if(solarModel == null || dateTimes == null)
+            if (solarModel == null || dateTimes == null)
             {
                 return null;
             }
 
             Core.Location location = solarModel.Location;
 
-            if(location == null)
+            if (location == null)
             {
                 return null;
             }
 
             Dictionary<DateTime, Vector3D> directionDictionary = new Dictionary<DateTime, Vector3D>();
-            foreach(DateTime dateTime in dateTimes)
+            foreach (DateTime dateTime in dateTimes)
             {
-                directionDictionary[dateTime] = Query.SunDirection(location, dateTime, false);
+                directionDictionary[dateTime] = SAM.Geometry.SolarCalculator.Query.SunDirection(location, dateTime, false);
             }
 
-            return Simulate(solarModel, directionDictionary, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            return Simulate(solarModel, directionDictionary, calctulateRadiation, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
 
         /// <summary>
@@ -188,15 +200,15 @@ namespace SAM.Geometry.SolarCalculator
         /// <param name="tolerance_Angle"></param>
         /// <param name="tolerance_Distance"></param>
         /// <returns>SolarFaceSimulationResults</returns>
-        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
+        public static List<SolarFaceSimulationResult> Simulate(this SolarModel solarModel, int year, List<int> hoursOfYear, bool calctulateRadiation, double minHorizonAngle = Core.Tolerance.Angle, double tolerance_Area = Core.Tolerance.MacroDistance, double tolerance_Snap = Core.Tolerance.MacroDistance, double tolerance_Angle = Core.Tolerance.Angle, double tolerance_Distance = Core.Tolerance.Distance)
         {
-            if(solarModel == null || hoursOfYear == null)
+            if (solarModel == null || hoursOfYear == null)
             {
                 return null;
             }
 
             List<DateTime> dateTimes = new List<DateTime>();
-            foreach(int hourOfYear in hoursOfYear)
+            foreach (int hourOfYear in hoursOfYear)
             {
                 DateTime dateTime = new DateTime(year, 1, 1);
                 dateTime = dateTime.AddHours(hourOfYear);
@@ -204,7 +216,7 @@ namespace SAM.Geometry.SolarCalculator
                 dateTimes.Add(dateTime);
             }
 
-            return Simulate(solarModel, dateTimes, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
+            return Simulate(solarModel, dateTimes, calctulateRadiation, minHorizonAngle, tolerance_Area, tolerance_Snap, tolerance_Angle, tolerance_Distance);
         }
     }
 }

@@ -144,16 +144,16 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
             List<Face3D> face3Ds = null;
             Face3D face3D = null;
-            double percent = double.NaN;
+            double factor = double.NaN;
 
 
             face3D = panel.Face3D;
-            percent = 0;
+            factor = 0;
             face3Ds = solarFaceSimulationResult?.GetSunExposureFace3Ds(dateTime);
             if (face3Ds != null && face3Ds.Count != 0)
             {
                 double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
-                percent = area / face3D.GetArea();
+                factor = area / face3D.GetArea();
             }
 
             index = Params.IndexOfOutputParam("face3D");
@@ -165,7 +165,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             index = Params.IndexOfOutputParam("exposedToSunPercent");
             if (index != -1)
             {
-                dataAccess.SetData(index, percent);
+                dataAccess.SetData(index, Core.Query.Round(factor * 100, 0.01));
             }
 
             index = Params.IndexOfOutputParam("exposedToSunFace3Ds");
@@ -174,7 +174,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 dataAccess.SetDataList(index, face3Ds?.ConvertAll(x => Geometry.Rhino.Convert.ToRhino_Brep(x)));
             }
 
-            percent = 0;
+            factor = 0;
             face3Ds = null;
 
             List<Face3D> face3Ds_Panel = panel.GetFace3Ds(true);
@@ -195,7 +195,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                     }
                 }
 
-                percent = area_SunExposure / area;
+                factor = area_SunExposure / area;
             }
 
             index = Params.IndexOfOutputParam("face3Ds_Panel");
@@ -207,7 +207,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
             index = Params.IndexOfOutputParam("exposedToSunPercent_Panel");
             if (index != -1)
             {
-                dataAccess.SetData(index, percent);
+                dataAccess.SetData(index, Core.Query.Round(factor * 100, 0.01));
             }
 
             index = Params.IndexOfOutputParam("exposedToSunFace3Ds_Panel");
@@ -230,16 +230,16 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
                 foreach(Aperture aperture in apertures)
                 {
                     face3D = aperture.GetFace3D();
-                    percent = 0;
+                    factor = 0;
                     face3Ds = Geometry.SolarCalculator.Query.SunExposureFace3Ds(solarFaceSimulationResult, face3D, dateTime);
                     if (face3Ds != null && face3Ds.Count != 0)
                     {
                         double area = face3Ds.ConvertAll(x => x.GetArea()).Sum();
-                        percent = area / face3D.GetArea();
+                        factor = area / face3D.GetArea();
                     }
 
                     face3Ds_Apertures.Add(face3D);
-                    percents.Add(percent);
+                    percents.Add(Core.Query.Round(factor * 100, 0.01));
                     if(face3Ds != null)
                     {
                         face3Ds_Apertures_SunExposure.AddRange(face3Ds);

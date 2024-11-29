@@ -1,6 +1,7 @@
 ﻿using SAM.Geometry.Object.Spatial;
 using SAM.Geometry.SolarCalculator;
-using SAM.Geometry.Spatial;
+using SAM.Weather;
+using SAM.Weather.SolarCalculator;
 using System.Collections.Generic;
 
 namespace SAM.Analytical.SolarCalculator
@@ -42,6 +43,12 @@ namespace SAM.Analytical.SolarCalculator
                     result.Add(linkedFace3D);
                 }
 
+            }
+
+            WeatherData weatherData = analyticalModel.GetValue<WeatherData>(AnalyticalModelParameter.WeatherData);
+            if(weatherData != null)
+            {
+                result.SetValue(SolarModelParameter.WeatherData, weatherData);
             }
 
             return result;
