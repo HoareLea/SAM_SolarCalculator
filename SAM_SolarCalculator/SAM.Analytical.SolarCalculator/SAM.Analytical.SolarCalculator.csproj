@@ -11,6 +11,7 @@
     <FileVersion>1.0.%2a</FileVersion>
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\build\</OutputPath>
@@ -19,17 +20,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\build\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Classes\**" />
-    <Compile Remove="Create\**" />
-    <Compile Remove="Enums\**" />
-    <EmbeddedResource Remove="Classes\**" />
-    <EmbeddedResource Remove="Create\**" />
-    <EmbeddedResource Remove="Enums\**" />
-    <None Remove="Classes\**" />
-    <None Remove="Create\**" />
-    <None Remove="Enums\**" />
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="SAM.Analytical">
       <HintPath>..\..\..\SAM\build\SAM.Analytical.dll</HintPath>
