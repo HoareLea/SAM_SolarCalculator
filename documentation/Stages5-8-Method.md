@@ -484,7 +484,7 @@ Score = UnwantedSolarIntercepted
       - materialPenalty    x MaterialFraction x AdmittedUnwantedEnergy
 ```
 
-**All three terms are positive quantities and the two costs are SUBTRACTED.** The handover draft
+**All three terms are positive quantities and the two costs are SUBTRACTED.** The original draft
 wrote `Capture + λ·Harm − μ·MaterialFraction`, which would have **rewarded** a device for
 destroying winter sun. Names state what quantities *are* rather than which way they point —
 `WantedSolarBlocked`, `wantedSolarPenalty` — and a test asserts that raising the penalty *lowers*

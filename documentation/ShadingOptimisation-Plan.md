@@ -416,7 +416,7 @@ sun → passes shade → aperture → first internal surface
 ```
 
 Anything described as reflected solar would require inter-reflection modelling and is a separate
-future capability (§7).
+future capability (§6).
 
 ---
 
@@ -444,7 +444,7 @@ produces both an ideal mass and a rationalised buildable device. That is what th
 
 ## 4. Staged plan
 
-Each stage gives: **Goal · New code · Difficulty · Model + effort · a paste-ready AI prompt.**
+Each stage gives: **Goal · New code · Difficulty · Acceptance.**
 
 Stages 0–4 are a vertical slice that is useful on its own (per-aperture irradiance, any period,
 interactive). Stages 5–8 are the shading design work. Stages 9–11 are optimisation, UI and validation.
@@ -472,39 +472,11 @@ Everything downstream needs per-aperture energy, not per-panel ratios.
 
 **Difficulty.** Medium — the normal/winding fidelity risk the previous plan flagged is real.
 
-**Model + effort.** **Opus, medium.** SAM's 2D-polygon-on-a-plane geometry model and the
-panel/aperture/space relations need genuine reasoning; getting the normal wrong invalidates every
-later stage silently.
-
-> **Prompt —**
-> In the SAM_SolarCalculator repo, add a new aperture-centric analysis target to
-> `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`.
->
-> First read: `Convert/ToSAM/SolarModel.cs`, `Modify/Simulate.cs`, and the private `AddSampleCells` /
-> `SampleCells` methods in `SAM.Weather.SolarCalculator/Modify/Simulate.cs`.
->
-> Create `ApertureSolarTarget` holding: aperture Guid, host panel Guid, the aperture's `Face3D`, its
-> outward `Vector3D` normal, azimuth and tilt (degrees, reuse `Geometry.Spatial.Query.Azimuth` and
-> `Query.Tilt`), gross area, and a `List<Face3D>` of analysis grid faces with their areas and centroids.
->
-> Add `Create.ApertureSolarTargets(AnalyticalModel analyticalModel, IEnumerable<Guid> apertureGuids,
-> double gridSize, double tolerance_Area, double tolerance_Distance)`. When `apertureGuids` is null or
-> empty it must return a target for EVERY aperture whose host panel satisfies `panel.IsExposedToSun()`
-> and is not shared by two spaces — mirroring the filtering already in `ToSAM_SolarModel`.
->
-> Naming: use **gridSize**, not cellSize — it matches the existing `_gridSize_` parameter on SAM's
-> space-level `Simulate`. See §2.4 of `documentation/ShadingOptimisation-Plan.md`.
->
-> The outward normal must be resolved against the host panel's orientation and the space it bounds, not
-> taken blindly from `Face3D.GetPlane().Normal` — a flipped face must not invert the result. Add an
-> xUnit test using `Tests/Fixtures/ModelA.sam` asserting every returned normal has a non-negative dot
-> product with the host panel's outward normal, and that passing null selects all apertures while
-> passing a subset selects exactly that subset.
->
-> Extract the subdivision logic from `AddSampleCells` into a reusable public
-> `Query.AnalysisGrid(Face3D, double gridSize, …)` rather than duplicating it; update
-> `AddSampleCells` to call it. Follow SAM's `Create`/`Query`/`Modify` static-partial-class convention
-> and the existing SPDX + copyright header.
+**Acceptance.**
+- Every returned target's normal has a non-negative dot product with the host panel's outward normal — a flipped `Face3D` must not invert the result (xUnit test on `Tests/Fixtures/ModelA.sam`).
+- `apertureGuids` null/empty returns a target for every aperture whose host panel is sun-exposed and not shared by two spaces (mirroring the filtering in `ToSAM_SolarModel`); a supplied subset returns exactly that subset.
+- The grid parameter is named `gridSize` (matches the space-level `Simulate`; §2.4), and `AddSampleCells` calls the extracted `Query.AnalysisGrid` rather than duplicating it.
+- Follows the `Create`/`Query`/`Modify` static-partial-class convention and the SPDX + copyright header.
 
 ---
 
@@ -532,29 +504,12 @@ It must be a plain type, not a Grasshopper concern, so it is testable and reusab
 
 **Difficulty.** Low.
 
-**Model + effort.** **Sonnet, low.** Date arithmetic and presets — mechanical, but write the
-wrap-around and southern-hemisphere tests.
-
-> **Prompt —**
-> Add an `AnalysisPeriod` type to `SAM_SolarCalculator/SAM.Core.SolarCalculator` following SAM
-> conventions (SPDX header, `SAMObject`-style JSON round-trip via `ToJsonObject`/`FromJsonObject` —
-> see `SAM.Geometry.SolarCalculator/Classes/SolarModel.cs` for the pattern).
->
-> Fields: Year, start month/day, end month/day, start hour, end hour, timestep-per-hour.
-> Methods: `HoursOfYear()` and `DateTimes()`.
->
-> Requirements:
-> - A period that wraps the year boundary (start 11/1, end 2/28) must yield Nov+Dec+Jan+Feb hours, not
->   an empty set.
-> - Start hour 9, end hour 17 must yield only hours 9–17 of each day in the range.
-> - Add `Create.AnalysisPeriod(AnalysisPeriodPreset preset, int year, Core.Location location)` with
->   presets FullYear, Summer, Winter, Equinox, CoolingSeason, HeatingSeason, PeakSummerDay,
->   PeakWinterDay. Seasons must be hemisphere-aware — flip when `location.Latitude < 0`.
-> - Handle leap years correctly (8784 vs 8760 hours).
->
-> Add xUnit tests for: full year hour count in leap and non-leap years, year-wrap, hour-of-day
-> filtering, and southern-hemisphere summer returning Dec–Feb. Do not add any Grasshopper code in this
-> stage.
+**Acceptance.**
+- A period that wraps the year boundary (start 11/1, end 2/28) yields Nov–Feb hours, not an empty set; an hour window of 9–17 yields only those hours of each day in the range.
+- Seasons are hemisphere-aware: southern-hemisphere summer returns Dec–Feb.
+- Leap years are handled (8784 vs 8760 hours).
+- `AnalysisPeriod` follows the SAM JSON round-trip convention (`ToJsonObject`/`FromJsonObject`, as in `SAM.Geometry.SolarCalculator/Classes/SolarModel.cs`).
+- xUnit tests cover: full-year hour count in leap and non-leap years, year-wrap, hour-of-day filtering, southern-hemisphere summer. No Grasshopper code in this stage.
 
 ---
 
@@ -586,69 +541,13 @@ refactor with the existing tests green, then build the cache on top of it.
 
 **Difficulty.** High — performance-critical, correctness-critical, and touches shipped code paths.
 
-**Model + effort.** **Opus, high.** Bitset packing, cache invalidation, the refactor of a
-load-bearing method, and a bias analysis of the binning approximation.
-
-> **Prompt —**
-> Two-part task in `SAM_SolarCalculator/SAM.Weather.SolarCalculator`. Do part A completely, with the
-> existing `dotnet test SAM_SolarCalculator/SAM_SolarCalculator.Tests` suite green, before starting B.
->
-> **Part A — de-duplicate.** `Modify/Simulate.cs` contains the same occlusion loop three times:
-> in `Simulate(SolarModel, Dictionary<DateTime,Vector3D>, bool, …)`, in `Simulate_Sampled`, and in
-> `ComputeSunExposure`. Extract ONE private method that takes the merged-face dictionary, a sun
-> direction, and the tolerances, and returns the lit `List<LinkedFace3D>` for that direction. Both the
-> exact and sampled paths must route through it. Pure refactor — no behaviour change, all existing
-> tests still green.
->
-> While you are in this file, also fix: the `merge == true` branch of `Simulate` builds a `result` list
-> of merged results but then returns `solarFaceSimulationResults` (the un-merged list), so `result` is
-> a dead store and callers get the wrong data. Fix it and add a regression test.
->
-> **Part B — sun grouping and the visibility cache.**
->
-> *(Superseded by the implementation — kept for the record. As built: the type is `SunBin` /
-> `Create.SunBins` with the engineer-facing `sunAngleStep` on the public surface; the representative
-> direction is the angular **group centre**, deliberately NOT DNI-weighted, so the cache is
-> weather-independent and a weather swap cannot force a geometric rebuild; the cache stores a
-> boolean lit bitset rather than `firstHit`, deferred to Stage 8 — see §2.4.1 and §10 of
-> `documentation/Stages0-4-Method.md`; and the signature gained `minHorizonAngle` and an explicit
-> `timeShiftInMinutes` that is part of the cache identity, per correction B1.)*
->
-> `Create.SunGroups(Core.Location location, IEnumerable<DateTime> dateTimes, double sunAngleStep)`:
-> compute each hour's sun direction via `Geometry.SolarCalculator.Query.SunDirection`, discard hours
-> below the horizon, group the rest on (altitude, azimuth) at `sunAngleStep` degrees resolution, and
-> return `SunGroup` objects each holding the member DateTimes and a representative direction computed
-> as the **irradiance-weighted mean** of member directions (weight by DNI from the SolarModel's
-> WeatherData when available, else unweighted).
->
-> `SolarVisibilityCache`: for a given analysis grid (from Stage 0's `ApertureSolarTarget`) and a set of
-> `SunGroup`, store `firstHit[gridIndex, groupIndex]` as a packed `ushort[]` — the index into an
-> element table of the surface that intercepted the sun, with a reserved sentinel for "visible". Do
-> NOT store a plain visible/blocked bit: §2.5 of the plan requires the blocker's identity, and the
-> sampled path already computes it — `Query.IntersectionTuples(...)` returns hits sorted, so
-> `tuples_Intersection[0].Item1.Guid` is the first-hit surface and is currently discarded. Build it by
-> running the extracted Part-A occlusion method once per group, in a `Parallel.For`. Include a geometry
-> hash (`Query.GeometryHash`, coordinates rounded to `Core.Tolerance.Distance` before hashing) so reuse
-> is invalidated automatically when geometry changes. Give it `ToJsonObject`/`FromJsonObject`.
->
-> Note that attribution is only available on the ray/sampled path — the exact polygon-clipping path
-> resolves all occluders at once and has no "first" blocker. Build the cache on the ray path.
->
-> Naming (see §2.4 of `documentation/ShadingOptimisation-Plan.md`): the parameter is **sunAngleStep**,
-> not binSize. `SolarVisibilityCache` stays an internal type name — it is accurate and it is not
-> user-facing — but no Grasshopper input, output or description may use the word "cache".
->
-> Add xUnit tests using `Tests/Fixtures/ModelA-WithShade.sam`:
-> 1. Cache-backed lit fractions for a full year match a direct per-hour `Simulate_Coverage` run to
->    within 2 % mean absolute error at a 2° sun-angle step — report the actual figure in test output.
-> 2. Group count at 2° is at least 4× smaller than the daylight-hour count.
-> 3. Changing any context face invalidates the geometry hash.
-> 4. JSON round-trip preserves `firstHit` exactly, element table included.
-> 5. With a single known shade in front of an aperture, every blocked grid point attributes to that
->    shade's Guid — not to a sentinel and not to a neighbouring surface.
->
-> Report the measured build time and the bias from grouping. If a 2° step exceeds 2 % MAE, report that
-> honestly and recommend the step that does not — do not tune the test to pass.
+**Acceptance.**
+- The three duplicated occlusion loops are collapsed into one private method (exact and sampled paths both route through it) as a pure refactor, with the existing test suite green *before* the cache is built.
+- The `merge == true` dead-store defect (§1.8) is fixed with a regression test.
+- Parameter naming follows §2.4 (`sunAngleStep`, not binSize); no Grasshopper input, output or description uses the word "cache".
+- Blocker attribution is only available on the ray/sampled path (the exact polygon-clipping path resolves all occluders at once and has no "first" blocker), so the visibility structure is built on the ray path.
+- Tests using `Tests/Fixtures/ModelA-WithShade.sam`: (1) cache-backed lit fractions for a full year match a direct per-hour `Simulate_Coverage` run to within 2 % mean absolute error at a 2° sun-angle step, reporting the actual figure; (2) group count at 2° is at least 4× smaller than the daylight-hour count; (3) changing any context face invalidates the geometry hash; (4) JSON round-trip preserves the stored visibility exactly; (5) with a single known shade in front of an aperture, every blocked grid point attributes to that shade's Guid (see §2.4.1 for the as-built storage).
+- Report the measured build time and the bias from grouping. If a 2° step exceeds 2 % MAE, report that honestly and recommend the step that does not — never tune the test to pass.
 
 ---
 
@@ -674,38 +573,12 @@ Also fix the `ToInt32` time-zone truncation (§1.8) here, since it is in the sam
 
 **Difficulty.** Medium — the maths is published and closed-form; the risk is units and conventions.
 
-**Model + effort.** **Opus, medium.** Perez coefficient bands and the azimuth convention in the
-existing code (`solarAzimuth = (rad + π/2) · 180/π`, `tilt_Temp = 180 − tilt`) are easy to get subtly
-wrong, and the error is a plausible-looking number rather than a crash.
-
-> **Prompt —**
-> In `SAM_SolarCalculator`, add an anisotropic sky model alongside the existing isotropic one.
->
-> Read `SAM.Geometry.SolarCalculator/Create/Radiation.cs` and
-> `SAM.Weather.SolarCalculator/Create/Radiation.cs` first. Note the existing conventions carefully:
-> `tilt_Temp = 180 - tilt`, and `solarAzimuth = (radians + π/2) * 180/π`. Your new code must use the
-> SAME conventions or results will be silently wrong.
->
-> 1. Add `Create.Radiation(...)` overloads taking a `SkyModel` enum (`Isotropic`,
->    `PerezAnisotropic`). **Keep the existing signatures byte-for-byte unchanged** and delegate to them
->    with `SkyModel.Isotropic` — this repo protects binary compatibility deliberately (see the
->    `Simulate_Coverage` overload remarks in `SAM.Analytical.SolarCalculator/Modify/Simulate.cs`).
-> 2. Implement Perez et al. 1990 all-weather: sky clearness ε, brightness Δ, the F1/F2 circumsolar and
->    horizon-brightening coefficients from the standard 8-bin table, and the a/b circumsolar geometry
->    terms. Cite the paper in a comment.
-> 3. Add `Query.SkyPatchDirections(SkyPatchSubdivision)` returning Tregenza-145 and Reinhart-577
->    direction sets with per-patch solid angles.
-> 4. Add `Create.ViewFactors(...)` computing per-grid-point sky and ground view factors by testing
->    each sky-patch direction for obstruction using the Stage-2 occlusion pass. Unobstructed vertical
->    surface must give SVF ≈ 0.5.
-> 5. Fix the fractional-time-zone bug in `SAM.Weather.SolarCalculator/Create/Radiation.cs`: it does
->    `System.Convert.ToInt32(Core.Query.Double(uTC))`, truncating UTC+5:30 to an integer. Carry the
->    fractional offset through.
->
-> Tests: unobstructed vertical surface SVF ≈ 0.5 ± 0.01; Perez and isotropic agree within 5 % on a
-> horizontal surface under overcast conditions (ε ≈ 1) and diverge by more than 10 % on a south-facing
-> vertical surface under clear conditions (ε > 6); a surface fully enclosed by context has SVF ≈ 0;
-> a location at UTC+5:30 produces a sun position ~30 min different from UTC+5:00.
+**Acceptance.**
+- The new `Create.Radiation` overloads take a `SkyModel` and the unchanged existing signatures delegate to them with `SkyModel.Isotropic`; the existing signatures stay byte-for-byte identical (binary compatibility is protected in this repo).
+- The new code uses the existing conventions (`tilt_Temp = 180 − tilt`, `solarAzimuth = (rad + π/2)·180/π`) so results are not silently wrong.
+- Perez et al. 1990 all-weather: sky clearness ε, brightness Δ, F1/F2 coefficients from the standard 8-bin table, and the a/b circumsolar terms; the paper is cited in a comment.
+- The fractional time-zone offset is carried through (UTC+5:30 is no longer truncated).
+- Tests: unobstructed vertical surface SVF ≈ 0.5 ± 0.01; Perez and isotropic agree within 5 % on a horizontal surface under overcast conditions (ε ≈ 1) and diverge by more than 10 % on a south-facing vertical surface under clear conditions (ε > 6); a surface fully enclosed by context has SVF ≈ 0; a UTC+5:30 location gives a sun position about 30 min different from UTC+5:00.
 
 ---
 
@@ -726,50 +599,11 @@ wrong, and the error is a plausible-looking number rather than a crash.
 
 **Difficulty.** Medium.
 
-**Model + effort.** **Opus, medium.** Mostly bookkeeping, but the unit handling (W/m² → kWh/m²,
-timestep scaling, area weighting) is where silent errors live.
-
-> **Prompt —**
-> Add per-aperture irradiance to `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`, combining
-> Stage 0's `ApertureSolarTarget`, Stage 1's `AnalysisPeriod`, Stage 2's `SolarVisibilityCache` and
-> Stage 3's view factors and Perez sky.
->
-> `ApertureIrradianceResult : ISolarSimulationResult` — follow `SolarCoverageSimulationResult` for the
-> constructor/JSON/`Reference` pattern. Hold: aperture Guid, the `AnalysisPeriod`, per-grid-point
-> kWh/m², area-weighted aperture total in kWh and kWh/m², the direct/diffuse/ground-reflected split,
-> and sunlit-hour count per grid point.
->
-> `Modify.SimulateApertures(AnalyticalModel analyticalModel, WeatherData weatherData, AnalysisPeriod
-> analysisPeriod, IEnumerable<int> hoursOfYear, IEnumerable<Guid> apertureGuids, double gridSize,
-> SkyModel skyModel, double sunAngleStep, bool recalculate)`:
-> resolve weather, build or reuse the visibility calculation (keyed by geometry hash, stored on the
-> `SolarModel` under a new `SolarModelParameter`), evaluate the period, attach results with
-> `analyticalModel.AddResult<Aperture>`, and return them.
->
-> Default/empty behaviour is fixed by §2.4 of `documentation/ShadingOptimisation-Plan.md` — implement
-> it exactly:
-> - `weatherData` null → use the `WeatherData` on the `AnalyticalModel`; neither present → error.
->   Put this precedence in ONE shared `Query.WeatherData(AnalyticalModel, WeatherData)` helper and
->   call it from every stage; do not reimplement it.
-> - `apertureGuids` null/empty → all valid external sun-exposed apertures.
-> - `analysisPeriod` null AND `hoursOfYear` null/empty → Full Year.
-> - `hoursOfYear` supplied → it **overrides** `analysisPeriod`. When both are given, the caller must be
->   told, not silently ignored.
-> - `gridSize` default 0.5 m, `sunAngleStep` default 2°, `recalculate` default false.
->
-> Units are the main risk — be explicit. Weather data is W/m²; results are kWh/m². Account for the
-> timestep and for per-grid-point area weighting when aggregating to the aperture total.
->
-> Tests using `Tests/Fixtures/ModelA-NoShade.sam` and `ModelA-WithShade.sam`:
-> - A south-facing aperture receives more annual irradiance than a north-facing one (northern hemisphere).
-> - The shaded model yields strictly less than the unshaded one on the same aperture.
-> - Summer-period + winter-period totals are within 1 % of the full-year total for the same aperture
->   (conservation — no double counting, no gaps).
-> - Two different `AnalysisPeriod`s reusing the SAME visibility calculation produce different results
->   without rebuilding it (assert the geometry pass runs once — count calls).
-> - Halving `gridSize` changes the aperture total by less than 2 % (grid convergence).
-> - Explicit `hoursOfYear` wins over a conflicting `analysisPeriod`.
-> - A model with WeatherData attached and a null `weatherData` argument resolves to the model's.
+**Acceptance.**
+- `ApertureIrradianceResult` follows the `SolarCoverageSimulationResult` constructor/JSON/`Reference` pattern.
+- Defaults and empty behaviour are exactly those of §2.4: `weatherData` null → the model's, neither → error (one shared `Query.WeatherData` helper called from every stage); `apertureGuids` null/empty → all valid external sun-exposed apertures; `analysisPeriod` and `hoursOfYear` both empty → Full Year; explicit `hoursOfYear` overrides `analysisPeriod` and the caller is told when both are given; `gridSize` 0.5 m, `sunAngleStep` 2°, `recalculate` false.
+- Units are explicit: weather data is W/m², results are kWh/m²; timestep and per-grid-point area weighting are applied when aggregating to the aperture total.
+- Tests using `Tests/Fixtures/ModelA-NoShade.sam` and `ModelA-WithShade.sam`: a south-facing aperture receives more annual irradiance than a north-facing one (northern hemisphere); the shaded model yields strictly less than the unshaded one; summer + winter period totals are within 1 % of the full-year total (no double counting, no gaps); two different periods reuse the same visibility calculation without rebuilding it (the geometry pass runs once); halving `gridSize` changes the aperture total by less than 2 %; explicit `hoursOfYear` wins over a conflicting `analysisPeriod`; a model with attached WeatherData and a null `weatherData` argument resolves to the model's.
 
 ---
 
@@ -795,35 +629,11 @@ be swappable so Phase 2 can plug in TAS loads without touching anything else.
 
 **Difficulty.** Low–Medium in code; high in judgement.
 
-**Model + effort.** **Opus, medium.** The code is easy; the reasoning about what "unwanted" means,
-and documenting the approximation honestly, is the valuable part.
-
-> **Prompt —**
-> Add a pluggable desirability-weighting strategy to
-> `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`.
->
-> Background: the Shaderade method (Sargent, Niemasz & Reinhart, IBPSA Building Simulation 2011)
-> weights each timestep by the zone's cooling-minus-heating load, so blocking sun during a
-> cooling-dominated hour scores positive and blocking during a heating-dominated hour scores negative.
-> SAM_SolarCalculator has NO thermal load model, so Phase 1 must approximate this. Design the interface
-> so a load-based strategy can be added later without changing callers.
->
-> `IDesirabilityStrategy` with `double Weight(DateTime dateTime, WeatherHour weatherHour,
-> ApertureSolarTarget target)`, returning positive when blocking direct sun at that hour is beneficial
-> and negative when it is harmful. Implement:
-> - `SeasonalDesirability` — explicit wanted and unwanted `AnalysisPeriod`s.
-> - `TemperatureDesirability` — `(dryBulbTemperature - balanceTemperature)` clamped to [-1, 1],
->   balance temperature default 15.5 °C, configurable.
-> - `IrradianceThresholdDesirability` — positive above a configurable incident-irradiance threshold.
-> - `CompositeDesirability` — weighted blend of the above.
->
-> Every implementation must carry an XML-doc comment stating plainly what it approximates and how it
-> differs from load-based Shaderade weighting. This is a documented approximation, not a silent one.
->
-> Tests: for a London EPW, `TemperatureDesirability` returns negative weights for the majority of
-> January daylight hours and positive for the majority of July afternoon hours; `SeasonalDesirability`
-> returns exactly zero outside both defined periods; `CompositeDesirability` with a single component at
-> weight 1.0 equals that component alone.
+**Acceptance.**
+- `IDesirabilityStrategy` returns positive when blocking direct sun at that hour is beneficial and negative when it is harmful, and is designed so a load-based strategy can be added later without changing callers.
+- `TemperatureDesirability` clamps `(dryBulbTemperature − balanceTemperature)` to [−1, 1]; the balance temperature defaults to 15.5 °C and is configurable. `IrradianceThresholdDesirability` is positive above a configurable incident-irradiance threshold.
+- Every implementation carries an XML-doc comment stating plainly what it approximates and how it differs from load-based Shaderade weighting — a documented approximation, not a silent one.
+- Tests: for a London EPW, `TemperatureDesirability` returns negative weights for the majority of January daylight hours and positive for the majority of July afternoon hours; `SeasonalDesirability` returns exactly zero outside both defined periods; `CompositeDesirability` with a single component at weight 1.0 equals that component alone.
 
 ---
 
@@ -865,57 +675,11 @@ merely plausible.
 
 **Difficulty.** High.
 
-**Model + effort.** **Opus, high.** Novel algorithm, 3-D traversal correctness, parallel reduction,
-and a non-obvious validation strategy. This is the hardest reasoning in the project.
-
-> **Prompt —**
-> Implement the shading potential field in `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`. This
-> is the core novel algorithm — read `documentation/ShadingOptimisation-Plan.md` §2.2 and §3 first.
->
-> Method (a volumetric generalisation of Kaftan & Marsh 2005 and Shaderade / Sargent, Niemasz &
-> Reinhart 2011): discretise the space in front of an aperture into voxels and score each voxel by how
-> much *desirability-weighted* direct beam it would intercept on its way to the aperture.
->
-> `ShadingVolume` — a voxel grid in the aperture's local frame (Stage 0 gives the frame): extents
-> out/up/down/left/right from the aperture plane, plus voxel size. Support clipping to a user-supplied
-> `SAM.Geometry.Spatial.Shell` so site/oversail limits are respected.
->
-> `Create.ShadingPotentialField(ApertureSolarTarget target, SolarVisibilityCache cache,
-> IEnumerable<SunGroup> sunGroups, IDesirabilityStrategy desirability, WeatherData weatherData,
-> ShadingVolume volume)`:
->
-> ```
-> for each sun group g, in parallel:
->     d = Σ over hours h in group g of  desirability.Weight(h) · DNI(h) · cos θ(h) · Δt
->     if |d| < epsilon: skip
->     for each aperture grid point a_i marked lit at group g:
->         march a ray from centroid(a_i) along -direction(g) through the voxel grid
->         for each voxel v the ray enters:
->             Benefit[v] += area(a_i) · d
-> ```
->
-> Requirements:
-> - Use a 3-D DDA voxel traversal (Amanatides & Woo). Do NOT test every voxel for ray intersection.
-> - Accumulate into per-thread buffers and reduce at the end — do not lock or use Interlocked per voxel.
-> - Positive `Benefit` = material here blocks unwanted sun. Negative = material here blocks WANTED sun.
-> - Expose `Percentile(double)` so a threshold can be chosen by "keep the top N % of benefit".
-> - Follow the §2.4 naming decisions: grid points come from `gridSize`, sun groups from `sunAngleStep`.
-> - `Query.IdealShadingVoxels(field, threshold, bool requireFacadeContact)` — threshold, keep the
->   largest connected component, optionally require connection to the aperture plane.
->
-> Validation test — this is the important one. For a synthetic south-facing window at 51.5° N with no
-> surrounding context, a seasonal desirability (summer unwanted / winter wanted), and a shallow
-> shading volume, assert that:
-> - the thresholded voxel set lies predominantly ABOVE the window head (a horizontal overhang emerges
->   naturally, not by construction);
-> - voxels in the low-winter-sun path directly in front of the window have NEGATIVE benefit;
-> - the depth at which benefit crosses zero along the window's centre horizontal agrees within 15 %
->   with the closed-form profile-angle prediction `D = H / tan(VSA)`, where VSA is the vertical shadow
->   angle at the summer/winter cutoff date.
->
-> That third assertion is the real check — it ties the numerical field to the analytical
-> Arumí-Noé/profile-angle result. If it does not hold, the field is wrong; report the discrepancy
-> rather than loosening the tolerance.
+**Acceptance.**
+- Positive `Benefit` means material at that voxel blocks unwanted sun; negative means it blocks wanted sun. The per-group weight is `Σ desirability · DNI · cos θ · Δt` over the group's hours.
+- The traversal is a 3-D DDA (Amanatides & Woo), not per-voxel intersection tests; accumulation uses per-thread buffers reduced at the end, with no locks or per-voxel `Interlocked`.
+- `ShadingVolume` supports clipping to a user-supplied `SAM.Geometry.Spatial.Shell`; `Percentile(double)` supports threshold selection ("keep the top N % of benefit"); `Query.IdealShadingVoxels(field, threshold, requireFacadeContact)` thresholds, keeps the largest connected component and optionally requires connection to the aperture plane. Grid points follow `gridSize`, sun groups follow `sunAngleStep` (§2.4).
+- Validation test (the important one): for a synthetic south-facing window at 51.5° N with no context, a seasonal desirability (summer unwanted / winter wanted) and a shallow volume — the thresholded voxel set lies predominantly above the window head (an overhang emerges rather than being constructed); voxels in the low-winter-sun path directly in front of the window have negative benefit; and the depth at which benefit crosses zero along the window's centre horizontal agrees within 15 % with the profile-angle prediction `D = H / tan(VSA)`, VSA being the vertical shadow angle at the summer/winter cutoff date. If this does not hold the field is wrong — report the discrepancy rather than loosening the tolerance.
 
 ---
 
@@ -931,29 +695,11 @@ and a non-obvious validation strategy. This is the hardest reasoning in the proj
 
 **Difficulty.** Medium. Marching cubes is standard; the mesh cleanup is the fiddly part.
 
-**Model + effort.** **Sonnet, medium.** Well-known algorithm with published lookup tables. Escalate to
-Opus only if the `Shell` conversion proves troublesome — and if it does, ship without it.
-
-> **Prompt —**
-> Add isosurface extraction to `SAM_SolarCalculator/SAM.Geometry.SolarCalculator`.
->
-> `Create.IsoSurface(ShadingPotentialField field, double threshold)` → `SAM.Geometry.Spatial.Mesh3D`,
-> using marching cubes with the standard 256-entry edge/triangle tables. Include vertex interpolation
-> along edges (not mid-point snapping) so the surface is smooth, and weld duplicate vertices within
-> `Core.Tolerance.Distance`.
->
-> Add `Convert.ToShell(Mesh3D, tolerance)` producing a `SAM.Geometry.Spatial.Shell`, and
-> `Query.ShadingMetrics(...)` returning projected area onto the aperture plane, enclosed volume, maximum
-> projection depth from the aperture plane, and the fraction of the field's total positive benefit that
-> the thresholded region captures.
->
-> `ToShell` MUST return null rather than throwing when the mesh is not cleanly convertible — SAM's
-> `Shell` booleans are tolerance-sensitive and no caller may depend on this succeeding. Log a warning
-> and carry on.
->
-> Tests: a field that is uniformly above threshold inside a box produces a closed mesh whose volume
-> matches the box within 5 %; a field entirely below threshold produces an empty mesh, not null and not
-> an exception; the extracted mesh has no naked edges for a closed region.
+**Acceptance.**
+- `Create.IsoSurface(field, threshold)` uses marching cubes with the standard 256-entry edge/triangle tables, interpolates vertices along edges (no mid-point snapping), and welds duplicate vertices within `Core.Tolerance.Distance`.
+- `Query.ShadingMetrics` returns projected area onto the aperture plane, enclosed volume, maximum projection depth and the fraction of total positive benefit captured by the thresholded region.
+- `ToShell` returns null (with a logged warning) rather than throwing when the mesh is not cleanly convertible — `Shell` booleans are tolerance-sensitive and nothing may depend on it succeeding; if it proves troublesome, ship without it.
+- Tests: a field uniformly above threshold inside a box produces a closed mesh whose volume matches the box within 5 %; a field entirely below threshold produces an empty mesh (not null, no exception); the mesh of a closed region has no naked edges.
 
 ---
 
@@ -1014,76 +760,12 @@ for it without implementing it now.
 
 **Difficulty.** High.
 
-**Model + effort.** **Opus, medium-high.** The trig is textbook; the typology abstraction, the
-per-element identity plumbing and the scoring design need care, and the verify-loop must not be
-allowed to become optional.
-
-> **Prompt —**
-> Implement shading rationalisation in `SAM_SolarCalculator/SAM.Analytical.SolarCalculator` — fitting
-> buildable devices to the Stage 6 potential field.
->
-> `IShadingTypology`: a parameter vector (`double[]`) with named bounds, and
-> `List<ShadingElement> Geometry(ApertureSolarTarget target, double[] parameters)`. Implement `Overhang`
-> (depth, tilt angle, offset above window head, side extension), `VerticalFins` (count, depth, angle,
-> spacing), `HorizontalLouvres` (pitch, depth, blade angle, offset), `EggCrate` (overhang + fins), and
-> `PerforatedScreen` (offset from façade, porosity, depth).
->
-> **Each element carries a stable Guid and a name** ("Overhang", "Left fin", "Louvre 3") — a
-> `ShadingElement` is `{ Guid, Name, List<Face3D> }`, NOT a bare `List<Face3D>`. Per §2.5 of
-> `documentation/ShadingOptimisation-Plan.md`, per-element performance reporting depends on
-> first-hit attribution naming a real element; generated geometry with no identity cannot be
-> attributed, and retrofitting identity later is the expensive case this is meant to avoid. The Guid
-> must be stable across re-evaluations with the same parameters so results are comparable.
->
-> `Query.SeedParameters(IShadingTypology, ShadingPotentialField, ApertureSolarTarget)`: derive a sane
-> starting parameter set in closed form rather than starting from random. Find the depth at which
-> benefit crosses zero along the window's centre line, convert to a vertical shadow angle, and size an
-> overhang as `D = windowHeight / tan(VSA)`; use the horizontal shadow angle equivalently for fins.
-> Cite the profile-angle method in comments.
->
-> `Query.FitScore(IShadingTypology, double[] parameters, ShadingPotentialField)`: voxelise the device
-> geometry into the field's grid and compute
-> `Capture` (fraction of total positive benefit covered), `Harm` (sum of negative benefit covered,
-> negative), and `Material` (device surface area). Return all three separately AND a combined
-> `Score = Capture + lambda*Harm - mu*Material` with caller-supplied lambda and mu.
->
-> `Modify.VerifyDevice(AnalyticalModel, ApertureSolarTarget, IShadingTypology, double[] parameters,
-> AnalysisPeriod wanted, AnalysisPeriod unwanted)` → `ShadingPerformanceResult`: register each
-> `ShadingElement` as context under its own Guid, run the Stage 4 aperture simulation **twice** — once
-> without the device (the unshaded baseline `U`) and once with it (`S`) — and compute, energy-weighted
-> from WeatherData, for each period:
->
-> - direct solar intercepted [kWh] = `U - S`
-> - Direct Shading Efficiency [%] = `(U - S) / U`
-> - Unwanted Solar Blocked [%] = `(U - S) / U` over the unwanted period
-> - Wanted Solar Retained [%] = `S / U` over the wanted period
-> - per-element direct contribution [kWh and %] = `Intercepted(e) / U`, read from the `firstHit`
->   attribution in the Stage 2 structure
->
-> Everything is weighted by solar energy per timestep, NOT by counting sun directions — a December
-> morning must not weigh the same as a July noon. Per-element contributions must sum to Direct Shading
-> Efficiency; assert this in a test.
->
-> Call the per-element figure **direct contribution**. Do NOT call it the loss from removing the
-> element — it is order-dependent under overlap (§2.5). Leave a documented extension point for
-> marginal contribution (recompute with one element removed) but do not implement it now.
->
-> Never describe intercepted energy as "reflected" — this engine has no material optical properties
-> and no secondary rays (§2.5).
->
-> `VerifyDevice` is the ground truth — `FitScore` is only a heuristic over the voxel field, and the two
-> can disagree.
->
-> Tests: on a south-facing window at 51.5° N, the seeded overhang depth is within 25 % of the
-> optimiser's converged depth (so seeding genuinely helps); `VerifyDevice` on a 1 m overhang shows
-> reduced summer and reduced winter irradiance, with the summer reduction larger; a zero-depth device
-> scores `Capture == 0`, `Material == 0` and Direct Shading Efficiency 0 %; `FitScore` ranks a deep
-> overhang above a shallow one for a summer-unwanted weighting; for an egg-crate, per-element
-> contributions sum to the system total within floating-point tolerance; an element narrower than
-> `gridSize` produces a warning about attribution resolution rather than a silently low contribution.
->
-> Do NOT let `VerifyDevice` become optional or skippable in the API — every reported result must be
-> verifiable against a real simulation.
+**Acceptance.**
+- Each `ShadingElement` is `{ Guid, Name, List<Face3D> }` with a Guid stable across re-evaluations with the same parameters — per-element reporting depends on first-hit attribution naming a real element (§2.5), and retrofitting identity later is the expensive case.
+- `FitScore` returns `Capture`, `Harm` and `Material` separately plus the combined `Score` with caller-supplied λ and μ; `SeedParameters` derives the start point in closed form (overhang depth `D = windowHeight / tan(VSA)` from the field's zero-crossing; the horizontal shadow angle equivalently for fins) and cites the profile-angle method in comments.
+- `VerifyDevice` registers each element as context under its own Guid and runs Stage 4 twice (baseline `U` and with device `S`); metrics are weighted by solar energy per timestep, never by counting sun directions. It is the ground truth (`FitScore` is only a heuristic and the two can disagree) and must never be optional or skippable in the API.
+- The per-element figure is called **direct contribution**, never "loss from removing the element" (order-dependent under overlap, §2.5); a documented extension point is left for marginal contribution, not implemented. Intercepted energy is never described as "reflected" (no optical properties, no secondary rays).
+- Tests: on a south-facing window at 51.5° N the seeded overhang depth is within 25 % of the optimiser's converged depth; `VerifyDevice` on a 1 m overhang shows reduced summer and winter irradiance with the summer reduction larger; a zero-depth device scores `Capture == 0`, `Material == 0` and Direct Shading Efficiency 0 %; `FitScore` ranks a deep overhang above a shallow one for a summer-unwanted weighting; for an egg-crate the per-element contributions sum to the system total within floating-point tolerance; an element narrower than `gridSize` produces a warning about attribution resolution rather than a silently low contribution.
 
 ---
 
@@ -1096,7 +778,7 @@ allowed to become optional.
 > solar as a **separate, construction-aware** figure — do not silently replace one with the other. The
 > geometric/transmittance decision belongs to the dedicated Stage 8.1 / Phase-2 work, not to the
 > Phase-1 plan. Glazing angular transmittance and SHGC treatment are recorded as a known Phase-1
-> limitation in §7.
+> limitation in §6.
 
 **Goal.** Follow the rays that *get through*. For each unblocked sun path, continue through the
 aperture and find the first internal surface it lands on, so shading can be judged by how much direct
@@ -1134,39 +816,11 @@ energy is the kind of thing that ends up in a report.
 **Difficulty.** Medium — the machinery all exists; the work is the internal-face query and honest
 labelling.
 
-**Model + effort.** **Opus, medium.** Mostly reuse, but the space/aperture adjacency and the
-transmittance boundary are both easy to get quietly wrong.
-
-> **Prompt —**
-> Add direct solar penetration reporting to `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`,
-> extending Stage 8. Read §2.5 and Stage 8.1 of `documentation/ShadingOptimisation-Plan.md` first.
->
-> `Query.InternalFace3Ds(AnalyticalModel, Aperture)`: the bounding faces of the space the aperture
-> serves, classified floor / wall / ceiling via `PanelType` and surface tilt. Note that
-> `Convert.ToSAM_SolarModel` deliberately excludes internal panels (it skips panels shared by two
-> spaces), so build this from the `AdjacencyCluster` — do not try to filter the SolarModel's set.
->
-> `Modify.SimulatePenetration(AnalyticalModel, ApertureSolarTarget, SolarVisibilityCache, AnalysisPeriod,
-> WeatherData)`: for every analysis grid point and sun group where the cache says the point is VISIBLE
-> (not intercepted), cast a segment from the grid point along the sun direction into the space and take
-> the first internal surface hit using `Geometry.Object.Spatial.Query.IntersectionTuples`. Accumulate
-> energy-weighted direct solar per internal surface and per surface type, using the same per-timestep
-> DNI·cosθ·Δt weighting as Stage 8 — not sun-vector counts.
->
-> Return a `SolarPenetrationResult` giving, per surface and per type, direct energy received [kWh] and
-> — when run against a model with and without the device — the reduction [%].
->
-> Be explicit in the API and XML docs that this is GEOMETRIC penetration of the beam incident on the
-> aperture: it does not apply glazing transmittance. Either state that in the result type's
-> documentation or multiply by the `ApertureConstruction` solar transmittance when one is available and
-> say which you did. Do not leave it ambiguous — a figure that reads as transmitted solar gain but is
-> actually incident energy will end up in a report.
->
-> Tests: a south-facing window with no shading puts direct solar on the floor in winter (low sun) and
-> less in summer (high sun) for the same room; adding a 1 m overhang reduces summer floor energy more
-> than winter; the sum over all internal surfaces equals the total admitted direct energy from Stage 8
-> within tolerance (nothing lost, nothing double-counted); a fully shaded aperture yields zero
-> penetration rather than null.
+**Acceptance.**
+- `Query.InternalFace3Ds` builds the bounding faces of the space the aperture serves from the `AdjacencyCluster`, classified floor / wall / ceiling via `PanelType` and surface tilt (not by filtering the SolarModel set, which excludes internal panels).
+- `Modify.SimulatePenetration` casts, for every visible grid point and sun group, a segment along the sun direction and takes the first internal hit via `Geometry.Object.Spatial.Query.IntersectionTuples`, accumulating energy per internal surface and per surface type with the same DNI·cos θ·Δt weighting as Stage 8.
+- The API and XML docs state that this is geometric penetration of the beam incident on the aperture and that glazing transmittance is not applied — or the `ApertureConstruction` solar transmittance is applied and that is stated; it is never left ambiguous.
+- Tests: an unshaded south-facing window puts direct solar on the floor in winter (low sun) and less in summer; a 1 m overhang reduces summer floor energy more than winter; the sum over all internal surfaces equals the total admitted direct energy from Stage 8 within tolerance (nothing lost, nothing double-counted); a fully shaded aperture yields zero penetration rather than null.
 
 ---
 
@@ -1192,34 +846,11 @@ area. Constraints: max projection depth, min blade pitch, manufacturable angle s
 
 **Difficulty.** Medium — well-trodden algorithms, and the expensive part is already solved.
 
-**Model + effort.** **Sonnet, medium.** NSGA-II is textbook. Use Opus only if the objectives need
-rethinking after seeing Stage 8 results.
-
-> **Prompt —**
-> Add optimisation to `SAM_SolarCalculator/SAM.Analytical.SolarCalculator`. Pure C#, no external
-> optimiser dependency — Stage 2's cache makes each evaluation cheap enough that we do not need
-> Galapagos/Wallacei/Opossum.
->
-> `ShadingOptimisationProblem`: an `IShadingTypology`, its parameter bounds, a list of objectives
-> (minimise unwanted-period irradiance, maximise wanted-period irradiance, minimise material area) and
-> constraints (max projection depth, minimum blade pitch, angle snapped to manufacturable steps).
->
-> `Query.PatternSearch(problem, double[] seed, int maxEvaluations)`: derivative-free compound pattern
-> search for the single-objective case. Evaluate the pattern in parallel. Start from Stage 8's
-> `SeedParameters`.
->
-> `Query.NSGAII(problem, populationSize, generations)`: standard NSGA-II — fast non-dominated sort,
-> crowding-distance selection, simulated binary crossover, polynomial mutation. Return a `ParetoFront`
-> of non-dominated parameter vectors with their objective values. Evaluate each generation in parallel
-> via `Parallel.For`.
->
-> Both must respect constraints by rejection (resample), not by penalty, so returned solutions are
-> always feasible. Both must be deterministic given a seed, for testable results.
->
-> Tests: on a convex synthetic 2-parameter objective, `PatternSearch` reaches the known optimum within
-> 1 %; `NSGAII` on ZDT1 (standard benchmark) produces a front whose hypervolume is within 5 % of the
-> analytic front after 100 generations; every returned solution satisfies the constraints; the same
-> seed gives identical results across runs.
+**Acceptance.**
+- Pure C#, no external optimiser dependency (Stage 2 makes each evaluation cheap enough).
+- `PatternSearch` is a derivative-free compound pattern search starting from Stage 8's `SeedParameters`, evaluating the pattern in parallel; `NSGAII` is standard (fast non-dominated sort, crowding distance, SBX crossover, polynomial mutation), evaluating each generation via `Parallel.For`.
+- Both respect constraints by rejection (resample), not penalty, so returned solutions are always feasible, and both are deterministic for a given seed.
+- Tests: on a convex synthetic 2-parameter objective `PatternSearch` reaches the known optimum within 1 %; `NSGAII` on ZDT1 produces a front whose hypervolume is within 5 % of the analytic front after 100 generations; every returned solution satisfies the constraints; the same seed gives identical results across runs.
 
 ---
 
@@ -1246,60 +877,14 @@ workflow reads consistently across the toolbar.
 
 **Difficulty.** Low–Medium — mechanical, but there is a lot of it, and the reuse UX needs thought.
 
-**Model + effort.** **Sonnet, medium.** Boilerplate-heavy with a clear template to copy. Two
-judgement calls: reuse must be visible enough that a stale result is never silent, without dragging
-"cache" into the engineer's vocabulary; and an overridden input must announce itself.
-
-> **Prompt —**
-> Add Grasshopper components for the shading workflow to
-> `SAM_SolarCalculator/Grasshopper/SAM.Analytical.Grasshopper.SolarCalculator/Component/`.
->
-> Copy the conventions from `SAMAnalyticalSolarSimulation.cs` exactly: derive from
-> `GH_SAMVariableOutputParameterComponent`, return `GH_SAMParam[]` from `Inputs`/`Outputs`, mark
-> parameters `ParamVisibility.Binding` or `.Voluntary`, give each component a NEW fixed
-> `ComponentGuid` (generate once, never change), set `LatestComponentVersion` to "1.0.0", category
-> "SAM", sub-category "Solar", and include the SPDX + copyright header.
->
-> Components: `SAMAnalytical.AnalysisPeriod`, `SAMAnalytical.ApertureSolarTargets`,
-> `SAMAnalytical.ApertureIrradiance`, `SAMAnalytical.ShadingPotentialField`,
-> `SAMAnalytical.IdealShadingShape`, `SAMAnalytical.RationaliseShading`, `SAMAnalytical.VerifyShading`.
->
-> **The input set is specified in §2.4 of `documentation/ShadingOptimisation-Plan.md`. Implement that
-> table exactly — names, order, visibility and defaults.** For the analysis components that is:
->
-> | Input | Visibility | Default / empty behaviour |
-> |---|---|---|
-> | `_analyticalModel` | Binding | required |
-> | `_weatherData_` | Voluntary | supplied wins; else the model's; else error |
-> | `_apertures_` | Voluntary | empty → ALL valid external sun-exposed apertures |
-> | `_analysisPeriod_` | Voluntary | empty → Full Year |
-> | `_HOYs_` | Voluntary | explicit HOYs OVERRIDE `_analysisPeriod_` |
-> | `_gridSize_` | **Binding** | 0.5 (metres) |
-> | `_sunAngleStep_` | Voluntary | 2 (degrees) |
-> | `_recalculate_` | Voluntary | false |
-> | `_run` | Binding | false |
->
-> Terminology is decided — do not deviate: **GridSize** not CellSize, **SunAngleStep** not BinSize,
-> **Recalculate** not RebuildCache. The word "cache" must not appear in any component name, input,
-> output or description.
->
-> Further requirements:
-> - Long-running components return immediately when `_run` is false — as `SAMAnalyticalSolarSimulation`
->   does.
-> - Reuse and invalidation are AUTOMATIC, driven by the geometry hash. `_recalculate_` is a manual
->   override, not the normal route. Expose a `reusedPreviousCalculation` boolean output as a
->   diagnostic, and when the geometry hash differs, recompute and say so via
->   `AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, ...)`. A stale result must never be returned
->   silently — but the engineer must not have to manage this by hand.
-> - When BOTH `_HOYs_` and `_analysisPeriod_` are supplied, use the HOYs and emit a `Remark` saying the
->   period was overridden. Never discard an input silently.
-> - `ShadingPotentialField` outputs both the field object and a coloured preview `Mesh3D`
->   (blue = negative benefit, red = positive) with a legend.
-> - Add `GooApertureSolarTarget` and `GooShadingPotentialField` param wrappers in
->   `SAM.Core.Grasshopper.SolarCalculator`, following the `GooResult`/`GooResultParam` pattern.
->
-> Write the component descriptions for an engineer who has not read this plan: say what the component
-> does, what the units are, and what each default means. Describe behaviour, not implementation.
+**Acceptance.**
+- Components copy the conventions of `SAMAnalyticalSolarSimulation.cs`: derive from `GH_SAMVariableOutputParameterComponent`, `GH_SAMParam[]` inputs/outputs with `ParamVisibility.Binding`/`.Voluntary`, a new fixed `ComponentGuid` per component (generated once, never changed), `LatestComponentVersion` "1.0.0", category "SAM", sub-category "Solar", SPDX + copyright header.
+- The input set, order, visibility and defaults are exactly the §2.4 table. Terminology is fixed: GridSize (not CellSize), SunAngleStep (not BinSize), Recalculate (not RebuildCache); the word "cache" appears in no component name, input, output or description.
+- Long-running components return immediately when `_run` is false.
+- Reuse and invalidation are automatic, driven by the geometry hash; `_recalculate_` is a manual override. A `reusedPreviousCalculation` boolean output is exposed as a diagnostic, and a changed geometry hash recomputes and says so via a `Remark` runtime message — a stale result is never returned silently.
+- When both `_HOYs_` and `_analysisPeriod_` are supplied the HOYs are used and a `Remark` says the period was overridden; no input is discarded silently.
+- `ShadingPotentialField` outputs the field object and a coloured preview `Mesh3D` (blue = negative benefit, red = positive) with a legend; `GooApertureSolarTarget` and `GooShadingPotentialField` follow the `GooResult`/`GooResultParam` pattern.
+- Component descriptions are written for an engineer who has not read this plan: what the component does, the units, and what each default means — behaviour, not implementation.
 
 ---
 
@@ -1324,73 +909,22 @@ judgement calls: reuse must be visible enough that a stale result is never silen
 
 **Difficulty.** Medium.
 
-**Model + effort.** **Sonnet, medium** for the test harness and docs; **Opus, medium** for
-interpreting the validation statistics and writing the assumptions register — that is a judgement
-document, and it is what makes the tool trustworthy in a report.
-
-> **Prompt —**
-> Build the validation suite and documentation for the shading workflow.
->
-> Add to `SAM_SolarCalculator.Tests` (xUnit, .NET 8, real `.sam` fixtures — see the existing
-> `Tests/README.md`):
-> - `AnalyticalValidationTests` — unobstructed horizontal surface annual irradiance vs a closed-form
->   clear-sky calculation (within 10 %); overhang cutoff depth vs the profile-angle formula (within
->   15 %); unobstructed vertical surface SVF = 0.5 ± 0.01.
-> - `SunGroupingBiasTests` — mean absolute error of reuse-based vs exact per-hour annual irradiance at 1°,
->   2° and 5° sun-angle steps. Emit a table to test output.
-> - `ConvergenceTests` — aperture total vs grid size (0.25/0.5/1.0 m) and field benefit vs voxel size.
-> - `ShadingMetricsTests` — per-element direct contributions sum to Direct Shading Efficiency; solar
->   penetration across internal surfaces sums to admitted direct energy; both within tolerance.
-> - Confirm the existing SAM-vs-TAS coverage benchmark still passes unchanged.
->
-> Then write `documentation/ShadingOptimisation-Method.md` covering: the method and its literature
-> basis (Kaftan & Marsh 2005; Sargent, Niemasz & Reinhart 2011 Shaderade; Arumí-Noé 1996; Shaviv),
-> the sun-grouping architecture and its measured bias, and — most importantly — an **assumptions
-> register** listing every approximation with its expected magnitude and direction:
-> isotropic vs Perez sky, no inter-reflection between surfaces (and therefore "intercepted", never
-> "reflected"), no thermal load model (desirability is approximated — see Stage 5), sun-position
-> grouping, grid and voxel discretisation, attribution resolution being bounded by `gridSize`,
-> direct contribution not being removal-loss, solar penetration being geometric rather than
-> transmittance-adjusted, and the `minHorizonAngle` cutoff.
->
-> Write the register so an engineer can decide whether the tool is fit for their specific job. Report
-> real measured numbers from the tests, not estimates. If a validation target is not met, write down
-> that it is not met and by how much — do not adjust the tolerance to make it pass.
+**Acceptance.**
+- `SAM_SolarCalculator.Tests` (xUnit, .NET 8, real `.sam` fixtures — see `Tests/README.md`) gains: `AnalyticalValidationTests` (unobstructed horizontal annual irradiance vs closed-form clear sky within 10 %; overhang cutoff depth vs the profile-angle formula within 15 %; unobstructed vertical SVF = 0.5 ± 0.01), `SunGroupingBiasTests` (MAE of reuse-based vs exact per-hour annual irradiance at 1°, 2°, 5°, emitting a table), `ConvergenceTests` (aperture total vs grid size 0.25/0.5/1.0 m; field benefit vs voxel size) and `ShadingMetricsTests` (per-element direct contributions sum to Direct Shading Efficiency; penetration across internal surfaces sums to admitted direct energy; both within tolerance).
+- The existing SAM-vs-TAS coverage benchmark still passes unchanged.
+- The assumptions register lists every approximation with its expected magnitude and direction: isotropic vs Perez sky, no inter-reflection (so "intercepted", never "reflected"), no thermal load model (desirability is approximated, Stage 5), sun-position grouping, grid and voxel discretisation, attribution resolution bounded by `gridSize`, direct contribution not being removal-loss, solar penetration being geometric rather than transmittance-adjusted, and the `minHorizonAngle` cutoff.
+- Reported numbers are measured from the tests, not estimated; if a validation target is not met, record that and by how much — do not adjust the tolerance to make it pass.
 
 ---
 
-## 5. Model and effort assignment at a glance
-
-| Stage | Work | Model | Effort |
-|---|---|---|---|
-| 0 | Aperture analysis target | **Opus** | Medium |
-| 1 | Analysis period / HOY | Sonnet | Low |
-| 2 | **Sun grouping + visibility calculation** | **Opus** | **High** |
-| 3 | Perez sky + view factors | **Opus** | Medium |
-| 4 | Per-aperture irradiance | **Opus** | Medium |
-| 5 | Desirability weighting | **Opus** | Medium |
-| 6 | **Shading potential field** | **Opus** | **High** |
-| 7 | Isosurface extraction | Sonnet | Medium |
-| 8 | **Rationalisation to buildable + performance metrics** | **Opus** | Medium–High |
-| 8.1 | Direct solar penetration into the space — **deferred, not Phase 1** | **Opus** | Medium |
-| 9 | Optimisation (pattern search, NSGA-II) | Sonnet | Medium |
-| 10 | Grasshopper components | Sonnet | Medium |
-| 11 | Validation + assumptions register | Sonnet (+Opus for the register) | Medium |
-
-**Rule of thumb.** Opus at high effort for the two stages that invent something (2 and 6) and the
-stages where a silent wrong answer is plausible (0, 3, 4, 5, 8, 8.1). Sonnet for the stages with a
-clear template or a textbook algorithm (1, 7, 9, 10, 11).
-
----
-
-## 6. Sequencing
+## 5. Sequencing
 
 **Slice 1 — useful on its own (Stages 0–4).** Per-aperture irradiance, any period, interactive.
 Ship it, use it, validate it. Nothing about shading design yet, and it is already worth having.
 
 **Slice 2 — the design tool (Stages 5–8.1).** Desirability, the potential field, the ideal shape, the
 rationalised device, and the performance metrics that make it reportable. Prototype Stage 6 on a single synthetic south-facing window with no context
-before running it on a real model — the analytical profile-angle check in the Stage 6 prompt is the
+before running it on a real model — the analytical profile-angle check in Stage 6 is the
 gate.
 
 **Slice 3 — polish (Stages 9–11).** Optimisation, components, validation.
@@ -1401,7 +935,7 @@ entirely reasonable.
 
 ---
 
-## 7. Risks, and what is still missing
+## 6. Risks, and what is still missing
 
 | Risk | Mitigation |
 |---|---|
@@ -1426,7 +960,7 @@ here.
 
 ---
 
-## 8. Why not just use Ladybug Tools?
+## 7. Why not just use Ladybug Tools?
 
 Worth stating plainly, since the previous plan was built on it.
 
@@ -1448,7 +982,7 @@ Worth stating plainly, since the previous plan was built on it.
 
 ---
 
-## 9. References
+## 8. References
 
 - Shaviv, E. (1975/1999) — computer-generated shading masks from the sun path.
 - Arumí-Noé, F. (1996) *Algorithm for the geometric construction of an optimum shading device*,
