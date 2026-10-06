@@ -1,4 +1,7 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using SAM.Geometry.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
 using System;
@@ -33,7 +36,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
         /// </summary>
         public SAMGeometrySunAnalysisBySunDirection()
           : base("SAMGeometry.SunAnalysisBySunDirection", "SAMGeometry.SunAnalysisBySunDirection",
-              "Sun Analysis by Sun Direction",
+              "Sun Analysis by Sun Direction\n\nEXAMPLE\nBuilding geometry as SAM geometry → SunAnalysisBySunDirection._geometries, and SunDirectionByTime.vectors → SunAnalysisBySunDirection._sunDirection (_run = true); read shaded and exposedToSun for the two face sets at that sun position.",
               "SAM", "Solar")
         {
         }

@@ -353,6 +353,7 @@ namespace SAM.SolarCalculator.Tests
             Assert.Equal(28, pairsB.Count - usedB.Count);
 
             double overallMeanAbsDelta = overlapAll == 0 ? double.NaN : sumAbs / overlapAll;
+            output.WriteLine($"SAM-vs-TAS with-shade benchmark: matched={matched} surfaces, overlapping hours={overlapAll}, overallMeanAbsDelta={overallMeanAbsDelta:0.00000} (gate < 0.02)");
             // SAM reproduces TAS shading to well within tolerance (live run: 0.0088). Guard generously.
             Assert.True(overlapAll > 0, "expected overlapping hours between matched pairs");
             Assert.True(overallMeanAbsDelta < 0.02, $"SAM-vs-TAS overallMeanAbsDelta unexpectedly high: {overallMeanAbsDelta:0.0000}");

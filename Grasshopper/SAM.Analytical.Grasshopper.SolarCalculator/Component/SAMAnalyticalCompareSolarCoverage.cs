@@ -35,7 +35,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
 
         public SAMAnalyticalCompareSolarCoverage()
           : base("SAMAnalytical.CompareSolarCoverage", "SAMAnalytical.CompareSolarCoverage",
-              "Compare SolarCoverageSimulationResults between two AnalyticalModels — typically one TAS-imported and one SAM-computed — to benchmark SAM's solar engine against TAS shade-proportion data.\nFaces are matched by Face3D.InternalPoint3D proximity within _tolerance_; unmatched faces are reported separately.\nTimestamps from both results are ceiling-rounded to the next whole hour and matched on (month, day, hour) ignoring year, so half-hour offsets and different base years align.\nPer matched pair, the per-hour delta (B − A) is reduced to mean absolute, max absolute, and RMSE.",
+              "Compare SolarCoverageSimulationResults between two AnalyticalModels — typically one TAS-imported and one SAM-computed — to benchmark SAM's solar engine against TAS shade-proportion data.\nFaces are matched by Face3D.InternalPoint3D proximity within _tolerance_; unmatched faces are reported separately.\nTimestamps from both results are ceiling-rounded to the next whole hour and matched on (month, day, hour) ignoring year, so half-hour offsets and different base years align.\nPer matched pair, the per-hour delta (B − A) is reduced to mean absolute, max absolute, and RMSE.\n\nEXAMPLE\nSAMAnalytical.SolarSimulation (_coverageOnly_ = true) → CompareSolarCoverage._analyticalModel_B; the TAS-imported model (e.g. SAMAnalytical.FromTBD with _importSurfaceShades_ = true) → CompareSolarCoverage._analyticalModel_A.\nRead overallMeanAbsDelta for the single benchmark number and logs for the per-face detail.",
               "SAM", "Solar")
         {
         }

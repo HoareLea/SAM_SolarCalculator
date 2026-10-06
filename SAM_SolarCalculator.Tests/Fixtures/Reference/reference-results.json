@@ -1,0 +1,174 @@
+{
+  "generated_utc": "2026-08-11T21:14:35Z",
+  "tool": "Ladybug Tools",
+  "tool_python": "3.10.10",
+  "ladybug_core_sunpath": "ladybug.sunpath.Sunpath",
+  "procedure": "Sun positions recomputed independently by ladybug.sunpath.Sunpath at hour-of-year + 30 min. Direct beam on each surface accumulated independently from those sun vectors and the exported GHI/DHI series, using SAM's documented DNI decomposition so that the comparison isolates solar geometry and transposition. The low-sun clamp is reported separately as a measured modelling effect, not validated against itself.",
+  "site": {
+    "name": "London_LHR_DSY1",
+    "latitude": 51.47999954223633,
+    "longitude": -0.44999998807907104,
+    "time_zone_hours": 0.0,
+    "elevation_m": 25.0,
+    "year": 1989,
+    "weather_hours": 8760,
+    "sun_position_shift_minutes": 30.0,
+    "minimum_elevation_deg": 5.0
+  },
+  "sun_position_error": {
+    "altitude_deg": {
+      "count": 8760,
+      "bias": 0.04938939165053777,
+      "mae": 0.1746306074422104,
+      "rmse": 0.21359572987054132,
+      "max_abs": 0.8216240841698433
+    },
+    "azimuth_deg_sun_above_horizon": {
+      "count": 4444,
+      "bias": 0.0018442960798272547,
+      "mae": 0.1004580210462854,
+      "rmse": 0.11837534814056448,
+      "max_abs": 0.29467479841559907
+    }
+  },
+  "apertures": [
+    {
+      "guid": "bba092e8-1757-494e-9be6-d1235e5bf499",
+      "azimuth_deg": 270.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.9999999999999982,
+      "sam_direct_kwh": 732.6567665619764,
+      "reference_direct_kwh": 733.0371481462914,
+      "reference_direct_unclamped_kwh": 1085.2148189069276,
+      "absolute_error_kwh": -0.380381584315046,
+      "relative_error_percent": -0.051891174311828145,
+      "low_sun_clamp_effect_percent": -32.452346265909256
+    },
+    {
+      "guid": "f979d466-5939-44aa-afd4-638da370add9",
+      "azimuth_deg": 270.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.9999999999999982,
+      "sam_direct_kwh": 732.6567665619764,
+      "reference_direct_kwh": 733.0371481462914,
+      "reference_direct_unclamped_kwh": 1085.2148189069276,
+      "absolute_error_kwh": -0.380381584315046,
+      "relative_error_percent": -0.051891174311828145,
+      "low_sun_clamp_effect_percent": -32.452346265909256
+    },
+    {
+      "guid": "97155001-d7c7-44f4-a826-b854720e45e5",
+      "azimuth_deg": 180.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 4.166667499999999,
+      "sam_direct_kwh": 1821.2126744833276,
+      "reference_direct_kwh": 1819.6606172946554,
+      "reference_direct_unclamped_kwh": 1953.0092897708687,
+      "absolute_error_kwh": 1.5520571886722792,
+      "relative_error_percent": 0.08529377258160203,
+      "low_sun_clamp_effect_percent": -6.82785653783849
+    },
+    {
+      "guid": "4097f69e-e990-4139-bd5a-191986a92a8d",
+      "azimuth_deg": 180.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 4.166664999999998,
+      "sam_direct_kwh": 1821.211581755942,
+      "reference_direct_kwh": 1819.659525498503,
+      "reference_direct_unclamped_kwh": 1953.0081179655288,
+      "absolute_error_kwh": 1.5520562574390624,
+      "relative_error_percent": 0.08529377258165208,
+      "low_sun_clamp_effect_percent": -6.82785653783849
+    },
+    {
+      "guid": "09928ab7-f725-4f55-a46c-f7f3450eac88",
+      "azimuth_deg": 180.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 4.166667499999999,
+      "sam_direct_kwh": 1821.2126744833276,
+      "reference_direct_kwh": 1819.6606172946554,
+      "reference_direct_unclamped_kwh": 1953.0092897708687,
+      "absolute_error_kwh": 1.5520571886722792,
+      "relative_error_percent": 0.08529377258160203,
+      "low_sun_clamp_effect_percent": -6.82785653783849
+    },
+    {
+      "guid": "fd0bcce1-a4bf-433e-940c-495a574d23f4",
+      "azimuth_deg": 0.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.5,
+      "sam_direct_kwh": 61.32325057832709,
+      "reference_direct_kwh": 62.01292310688217,
+      "reference_direct_unclamped_kwh": 80.782471127599,
+      "absolute_error_kwh": -0.6896725285550787,
+      "relative_error_percent": -1.11214323402623,
+      "low_sun_clamp_effect_percent": -23.23467920543011
+    },
+    {
+      "guid": "6000f077-bd5c-495b-9d5d-f9ec4a4929bf",
+      "azimuth_deg": 0.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.5,
+      "sam_direct_kwh": 61.32325057832709,
+      "reference_direct_kwh": 62.01292310688217,
+      "reference_direct_unclamped_kwh": 80.782471127599,
+      "absolute_error_kwh": -0.6896725285550787,
+      "relative_error_percent": -1.11214323402623,
+      "low_sun_clamp_effect_percent": -23.23467920543011
+    },
+    {
+      "guid": "8af862c4-6615-4288-ad18-412ca285acf2",
+      "azimuth_deg": 0.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.5,
+      "sam_direct_kwh": 61.32325057832709,
+      "reference_direct_kwh": 62.01292310688217,
+      "reference_direct_unclamped_kwh": 80.782471127599,
+      "absolute_error_kwh": -0.6896725285550787,
+      "relative_error_percent": -1.11214323402623,
+      "low_sun_clamp_effect_percent": -23.23467920543011
+    },
+    {
+      "guid": "6f1bf9d1-baa8-43ec-af2d-8737d22aa2c5",
+      "azimuth_deg": 90.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.9999999999999982,
+      "sam_direct_kwh": 921.4613930892032,
+      "reference_direct_kwh": 922.5579882362113,
+      "reference_direct_unclamped_kwh": 971.1623945982569,
+      "absolute_error_kwh": -1.0965951470080881,
+      "relative_error_percent": -0.11886463084067042,
+      "low_sun_clamp_effect_percent": -5.004766106306244
+    },
+    {
+      "guid": "082e659c-0f21-4c35-b4e4-498eb8e9e29f",
+      "azimuth_deg": 90.0,
+      "tilt_deg": 90.0,
+      "sampled_area_m2": 2.9999999999999982,
+      "sam_direct_kwh": 921.4613930892032,
+      "reference_direct_kwh": 922.5579882362113,
+      "reference_direct_unclamped_kwh": 971.1623945982569,
+      "absolute_error_kwh": -1.0965951470080881,
+      "relative_error_percent": -0.11886463084067042,
+      "low_sun_clamp_effect_percent": -5.004766106306244
+    }
+  ],
+  "low_sun_clamp": {
+    "rule": "DNI = max(0, GHI - DHI) / max(sin(altitude), sin(5 deg))",
+    "max_unclamped_dni_wm2": 116689.76382406699,
+    "max_clamped_dni_wm2": 940.1204060733132,
+    "solar_constant_wm2": 1361.0,
+    "hours_where_unclamped_dni_exceeds_solar_constant": 3,
+    "hours_with_beam_below_minimum_elevation": 221
+  },
+  "horizontal_beam_closure": {
+    "measured_beam_horizontal_kwh_m2": 525.169,
+    "reconstructed_from_dni_kwh_m2": 524.703532850368,
+    "relative_error_percent": -0.08863187842998933
+  },
+  "not_covered": [
+    "Diffuse-sky transposition (Perez on a tilted surface): Ladybug's Python API exposes decomposition, not transposition, so no like-for-like independent comparison is available from this reference. Remains a manual external check.",
+    "Ground-reflected transposition, for the same reason.",
+    "Context-obstructed apertures: the reference has no geometry engine here, so shading by surrounding surfaces is validated analytically in C# instead."
+  ]
+}

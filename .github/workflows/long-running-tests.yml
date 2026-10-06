@@ -1,0 +1,180 @@
+name: Long-running tests (Windows)
+
+# The expensive half of the suite, split out of "Build (Windows)" so the required PR check stays
+# quick. Everything here is tagged [Trait("Category", "LongRunning")] in the test project; the two
+# workflows use complementary --filter expressions, so between them they still run every test.
+#
+# NOT a required PR check by design. It runs where a slow answer is still a useful answer:
+#   - push to master / sow/**  -> the integration branches, i.e. after a PR has already merged;
+#   - workflow_dispatch        -> on demand, e.g. before promoting a sow branch;
+#   - nightly                  -> see the schedule note below.
+
+on:
+  push:
+    branches: [ "master", "main", "sow/**" ]
+  workflow_dispatch:
+  # Nightly is justified here by a real exposure rather than by habit: the build step below clones
+  # the SAM dependency repo fresh on every run, so SAM core can change underneath this repository
+  # with no commit here to trigger a build. Without a scheduled run, a breaking upstream change is
+  # invisible until somebody happens to push. 03:00 UTC keeps it clear of working hours.
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  long-running-tests:
+    # Same guard as build.yml: shows as "skipped" rather than failing if merged upstream.
+    if: github.repository_owner == 'SAM-BIM'
+    runs-on: windows-2022
+    # The convergence sweeps and the exhaustive enumeration dominate this job; the default 360 min
+    # is far more than it needs and would hide a hang.
+    timeout-minutes: 120
+
+    env:
+      MSBUILDDISABLENODEREUSE: "1"
+      ORG_NAME: "SAM-BIM"
+      REPO_NAME: "SAM_SolarCalculator"
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: ${{ env.REPO_NAME }}
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Compute SAMVersion
+        id: ver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ref = '${{ github.ref_name }}'
+          # .NET AssemblyVersion components are UInt16 (max 65535). Cap to 60000 for headroom.
+          $run = ${{ github.run_number }} % 60000
+          if ($ref -match 'sow/(\d{4})-Q(\d)') {
+            $v = "$($Matches[1]).$($Matches[2]).$run"
+            $src = "branch '$ref'"
+          } else {
+            $now = (Get-Date).ToUniversalTime()
+            $quarter = [int][Math]::Ceiling($now.Month / 3.0)
+            $v = "$($now.Year).$quarter.$run"
+            $src = "date $($now.ToString('yyyy-MM-dd')) (ref '$ref' not sow/yyyy-Qx)"
+          }
+          Write-Host "SAMVersion = $v (from $src)"
+          "samversion=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Clone dependency repos (siblings)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $org  = '${{ env.ORG_NAME }}'
+          $repo = '${{ env.REPO_NAME }}'
+
+          # Keep the current repo LAST.
+          $buildOrder = @(
+            'SAM'
+            $repo
+          )
+
+          $deps = $buildOrder[0..($buildOrder.Count-2)]
+          foreach ($r in $deps) {
+            if (Test-Path $r) { continue }
+            $refName = '${{ github.ref_name }}'
+            $candidates = @()
+            # This workflow only ever runs on a branch (push / dispatch / schedule), never on a PR
+            # merge ref, so ref_name is the whole story.
+            if ($refName -match '^sow/') { $candidates += $refName }
+            # Same rule as build.yml: on the default branch, dependencies must come from THEIR
+            # default branch, not from quarterly code, or master CI silently builds against sow/**.
+            $isDefaultBranchBuild = ($refName -eq 'master' -or $refName -eq 'main')
+            if (-not $isDefaultBranchBuild) { $candidates += 'sow/2026-Q2' }
+            $cloned = $false
+            foreach ($cand in $candidates) {
+              $has = (git ls-remote --heads "https://github.com/$org/$r.git" $cand 2>$null | Out-String).Trim()
+              if ($has) {
+                Write-Host "Cloning $org/$r @ $cand"
+                git clone --depth 1 --branch $cand "https://github.com/$org/$r.git" $r
+                $cloned = $true
+                break
+              }
+            }
+            if (-not $cloned) {
+              Write-Host "Cloning $org/$r @ default branch"
+              git clone --depth 1 "https://github.com/$org/$r.git" $r
+            }
+          }
+
+          # Ensure ReferencePath exists even before SAM_Windows builds
+          New-Item -ItemType Directory -Force -Path "SAM_Windows\build" | Out-Null
+
+      - name: Restore + Rebuild in order (CI props like SAM_Deploy)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $repo = '${{ env.REPO_NAME }}'
+          $windowsRef = (Resolve-Path 'SAM_Windows\build').Path
+
+          # IMPORTANT: keep these as an ARRAY of args (do NOT join into one string)
+          $common = @(
+            '/m:1'
+            '/nr:false'
+            '/v:m'
+            '/p:Configuration=Release'
+            '/p:UseSharedCompilation=false'
+            '/p:RunPostBuildEvent=OnOutputUpdated'
+            "/p:ReferencePath=$windowsRef"
+            '/p:SAMVersion=${{ steps.ver.outputs.samversion }}'
+          )
+
+          $buildOrder = @(
+            'SAM'
+            $repo
+          )
+
+          $solutions = foreach ($r in $buildOrder) {
+            $sln = Get-ChildItem -Path $r -Filter *.sln -File | Select-Object -First 1
+            if (-not $sln) { throw "No .sln found under: $r" }
+            $sln.FullName
+          }
+
+          foreach ($sln in $solutions) {
+            Write-Host "==> Restore: $sln"
+            & msbuild $sln /t:Restore @common
+          }
+
+          foreach ($sln in $solutions) {
+            Write-Host "==> Rebuild: $sln"
+            & msbuild $sln /t:Rebuild @common
+          }
+
+      # The complement of the filter in build.yml. If a test is ever added with the LongRunning
+      # trait, it lands here automatically and disappears from the PR check — and vice versa — so
+      # the two filters cannot both drop the same test.
+      - name: Run LongRunning tests (Release)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proj = "${{ env.REPO_NAME }}\SAM_SolarCalculator.Tests\SAM.SolarCalculator.Tests.csproj"
+          & dotnet test $proj --no-build -c Release `
+            --filter "Category=LongRunning" `
+            --logger "console;verbosity=normal" `
+            --logger "trx;LogFileName=long-running.trx" `
+            --results-directory "${{ github.workspace }}\test-results"
+          if ($LASTEXITCODE -ne 0) { throw "LongRunning tests failed with exit code $LASTEXITCODE" }
+
+      # These runs are infrequent and slow, so keep the result readable after the log scrolls away.
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: long-running-test-results
+          path: test-results/*.trx
+          if-no-files-found: warn

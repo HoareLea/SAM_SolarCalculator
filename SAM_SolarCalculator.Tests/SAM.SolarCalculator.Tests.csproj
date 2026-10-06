@@ -47,4 +47,13 @@
     <None Update="Fixtures\*.sam" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Stage 11 independent-reference material. reference-results.json is generated ONCE, offline,
+       by Fixtures\Reference\generate_reference.py under the Ladybug Tools Python, and is then a
+       committed number that IndependentReferenceTests asserts against. Ladybug is deliberately NOT
+       a build, test or runtime dependency: nothing in CI runs Python. The CSV inputs are kept
+       beside it so the reference can be regenerated and audited. -->
+  <ItemGroup>
+    <None Update="Fixtures\Reference\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -19,13 +19,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Convert\**" />
-    <Compile Remove="Enums\**" />
     <Compile Remove="Interfaces\**" />
     <EmbeddedResource Remove="Convert\**" />
-    <EmbeddedResource Remove="Enums\**" />
     <EmbeddedResource Remove="Interfaces\**" />
     <None Remove="Convert\**" />
-    <None Remove="Enums\**" />
     <None Remove="Interfaces\**" />
   </ItemGroup>
   <ItemGroup>

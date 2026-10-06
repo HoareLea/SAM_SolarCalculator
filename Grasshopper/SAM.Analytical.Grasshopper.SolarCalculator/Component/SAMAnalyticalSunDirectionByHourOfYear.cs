@@ -1,4 +1,7 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using SAM.Analytical.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
 using SAM.Geometry.Spatial;
@@ -31,7 +34,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMAnalyticalSunDirectionByHourOfYear()
           : base("SAMAnalytical.SunDirectionByHourOfYear", "SAMAnalytical.SunDirectionByHourOfYear",
-              "Sun Direction by hour of year for AnalyticalModel",
+              "Sun Direction by hour of year for AnalyticalModel\n\nEXAMPLE\nAnalyticalModel → SunDirectionByHourOfYear (_year = 2018, _hoursOfYear from AnalysisPeriod.HOYs) → vectors: one sun direction per hour, into SAMGeometry.ShadingBySunDirection._sunDirection or SAMGeometry.SunAnalysisBySunDirection._sunDirection. The same vectors and hours feed ModifySolarFaceSimulationResult._sunVectors and ModifySolarFaceSimulationResult._hoursOfYear.",
               "SAM", "Solar")
         {
         }

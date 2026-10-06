@@ -1,4 +1,7 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using SAM.Analytical.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
@@ -31,7 +34,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMAnalyticalModifySolarFaceSimulationResult()
           : base("SAMAnalytical.ModifySolarFaceSimulationResult", "SAMAnalytical.ModifySolarFaceSimulationResult",
-              "This node modify Shading data for Panel",
+              "This node modifies Shading data for Panel\n\nEXAMPLE\nAnalysisPeriod.HOYs → ModifySolarFaceSimulationResult._hoursOfYear and SunDirectionByHourOfYear.vectors → ModifySolarFaceSimulationResult._sunVectors (same hours, same _year), one Panel → _panel, _run = true. The analyticalModel output carries the panel's updated shading data.",
               "SAM", "Solar")
         {
         }

@@ -1,4 +1,7 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using SAM.Analytical.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
 using SAM.Geometry.SolarCalculator;
@@ -33,7 +36,7 @@ namespace SAM.Analytical.Grasshopper.SolarCalculator
         /// </summary>
         public SAMGeometrySunExposure()
           : base("SAMGeometry.SunExposure", "SAMGeometry.SunExposure",
-              "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results display to specific items  ",
+              "Gets Sun Exposure Data for Panel \n*optionally Aperture can be connected to limit results display to specific items  \n\nEXAMPLE\nSolarSimulation.analyticalModel (_coverageOnly_ = false) → SunExposure._analyticalModel - the model must carry its solar results, or the node warns that it has not been simulated.\nOne Panel (or one Aperture) → _panel, the moment to inspect → _time; read exposedToSunPercent and preview exposedToSunFace3Ds.",
               "SAM", "Solar")
         {
         }

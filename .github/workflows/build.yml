@@ -155,6 +155,30 @@ jobs:
             & msbuild $sln /t:Rebuild @common
           }
 
+      # The Rebuild above compiles the test project but never runs it, so a green check used to mean
+      # only "it compiles". Everything the suite asserts - the Stage 11 gates, the SAM-vs-TAS
+      # regression, the convergence studies - was unenforced. This runs it.
+      # --no-build: the Release binaries already exist from the Rebuild step; recompiling here would
+      # risk resolving the prebuilt SAM core DLLs differently from the assemblies under test.
+      #
+      # Category!=LongRunning is the FAST half. It keeps every inexpensive behavioural and
+      # regression test - the Gate-7 optimiser cases including the Case7 1-D enumerated-optimum
+      # check, the PenaltyDomain wanted-solar behaviour, the MinimumIncrement/grid-warning
+      # regressions, the determinism checks and the JSON round-trips - and drops only the
+      # convergence sweeps, exhaustive enumerations and expensive reference comparisons, which
+      # long-running-tests.yml runs with the complementary Category=LongRunning filter. Untagged
+      # tests are FAST by default, so a new test is covered by the required check unless someone
+      # deliberately tags it out.
+      - name: Run fast tests (Release)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proj = "${{ env.REPO_NAME }}\SAM_SolarCalculator.Tests\SAM.SolarCalculator.Tests.csproj"
+          & dotnet test $proj --no-build -c Release `
+            --filter "Category!=LongRunning" `
+            --logger "console;verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { throw "Tests failed with exit code $LASTEXITCODE" }
+
       - name: Upload build folders (optional)
         uses: actions/upload-artifact@v4
         with:

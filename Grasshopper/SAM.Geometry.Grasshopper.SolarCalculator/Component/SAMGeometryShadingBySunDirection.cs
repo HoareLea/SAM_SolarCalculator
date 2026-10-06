@@ -1,4 +1,7 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using SAM.Geometry.Grasshopper.SolarCalculator.Properties;
 using SAM.Core.Grasshopper;
 using System;
@@ -33,7 +36,7 @@ namespace SAM.Geometry.Grasshopper.SolarCalculator
         /// </summary>
         public SAMGeometryShadingBySunDirection()
           : base("SAMGeometry.ShadingBySunDirection", "SAMGeometry.ShadingBySunDirection",
-              "Gets Shading Geometry for given Geometry and sun direction",
+              "Gets Shading Geometry for given Geometry and sun direction\n\nEXAMPLE\nShading surfaces as SAM geometry → ShadingBySunDirection._geometries, and SunDirectionByTime.vectors → ShadingBySunDirection._sunDirection; shadings are the faces hidden from that sun direction.",
               "SAM", "Solar")
         {
         }

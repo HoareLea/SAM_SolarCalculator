@@ -51,6 +51,9 @@
     <Reference Include="SAM.Geometry.Rhino">
       <HintPath>..\..\..\SAM\build\SAM.Geometry.Rhino.dll</HintPath>
     </Reference>
+    <Reference Include="SAM.Weather">
+      <HintPath>..\..\..\SAM\build\SAM.Weather.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
@@ -68,6 +71,7 @@
     <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Analytical.SolarCalculator\SAM.Analytical.SolarCalculator.csproj" />
     <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Core.SolarCalculator\SAM.Core.SolarCalculator.csproj" />
     <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Geometry.SolarCalculator\SAM.Geometry.SolarCalculator.csproj" />
+    <ProjectReference Include="..\..\SAM_SolarCalculator\SAM.Weather.SolarCalculator\SAM.Weather.SolarCalculator.csproj" />
   </ItemGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -80,6 +84,6 @@
     <DocumentationFile>..\..\build\SAM.Analytical.Grasshopper.SolarCalculator.xml</DocumentationFile>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(ConfigurationName)&quot; == &quot;Debug2020&quot; set Version=Revit 2020&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug2021&quot; set Version=Revit 2021&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug2022&quot; set Version=Revit 2022&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug2023&quot; set Version=Revit 2023&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug2024&quot; set Version=Revit 2024&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release2020&quot; set Version=Revit 2020&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release2021&quot; set Version=Revit 2021&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release2022&quot; set Version=Revit 2022&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release2023&quot; set Version=Revit 2023&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release2024&quot; set Version=Revit 2024&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(TargetDir)\$(ProjectName).gha&quot;&#xD;&#xA;&#xD;&#xA;set SAM_DIR=$(APPDATA)\SAM\%25Version%25&#xD;&#xA;if not exist &quot;%25SAM_DIR%25&quot; mkdir &quot;%25SAM_DIR%25&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)*.dll&quot; &quot;%25SAM_DIR%25&quot;&#xD;&#xA;copy &quot;%25SAM_DIR%25\$(ProjectName).dll&quot; &quot;%25SAM_DIR%25\$(ProjectName).gha&quot;&#xD;&#xA;&#xD;&#xA;::erase &quot;%25SAM_DIR%25$(ProjectName).dll&quot;&#xD;&#xA;::erase &quot;$(TargetPath)&quot;" />
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(TargetDir)\$(ProjectName).gha&quot;&#xD;&#xA;&#xD;&#xA;set SAM_DIR=$(APPDATA)\SAM\&#xD;&#xA;if not exist &quot;%25SAM_DIR%25&quot; mkdir &quot;%25SAM_DIR%25&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)*.dll&quot; &quot;%25SAM_DIR%25&quot;&#xD;&#xA;copy &quot;%25SAM_DIR%25\$(ProjectName).dll&quot; &quot;%25SAM_DIR%25\$(ProjectName).gha&quot;&#xD;&#xA;&#xD;&#xA;::erase &quot;%25SAM_DIR%25$(ProjectName).dll&quot;&#xD;&#xA;::erase &quot;$(TargetPath)&quot;" />
   </Target>
 </Project>

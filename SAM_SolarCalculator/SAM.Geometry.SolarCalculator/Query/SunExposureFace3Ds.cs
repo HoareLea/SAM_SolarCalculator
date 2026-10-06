@@ -1,4 +1,6 @@
-﻿using SAM.Geometry.Spatial;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+using SAM.Geometry.Spatial;
 using System.Collections.Generic;
 
 namespace SAM.Geometry.SolarCalculator
@@ -21,11 +23,18 @@ namespace SAM.Geometry.SolarCalculator
             Plane plane = null;
             for (int i = 0; i < face3Ds.Count; i++)
             {
-                plane = face3Ds[i].GetPlane();
+                plane = face3Ds[i]?.GetPlane();
                 if(plane != null)
                 {
                     break;
                 }
+            }
+
+            // Every sun-exposure face may be degenerate (GetPlane() == null) — without this guard
+            // plane.Coplanar below throws a NullReferenceException instead of reporting no overlap.
+            if (plane == null)
+            {
+                return null;
             }
 
             if(!plane.Coplanar(face3D, tolerance))
@@ -35,6 +44,10 @@ namespace SAM.Geometry.SolarCalculator
 
             List<Planar.Face2D> face2Ds = face3Ds.ConvertAll(x => plane.Convert(x));
             Planar.Face2D face2D = plane.Convert(face3D);
+            if (face2D == null)
+            {
+                return null;
+            }
 
             List<Planar.Face2D> face2Ds_Intersection = new List<Planar.Face2D>();
             foreach (Planar.Face2D face2D_Temp in face2Ds)

@@ -1,0 +1,9 @@
+key,value
+name,London_LHR_DSY1
+latitude,51.47999954223633
+longitude,-0.44999998807907104
+elevation,25
+timeZoneOffsetHours,0
+year,1989
+sunPositionShiftMinutes,30
+minimumSinElevationDegrees,5

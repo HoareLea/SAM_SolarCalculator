@@ -99,6 +99,14 @@ namespace SAM.Analytical.SolarCalculator
                 }
             }
 
+            // merge == true: return the merged results that were actually attached to the model.
+            // (Previously this returned solarFaceSimulationResults — the un-merged list — making
+            // result a dead store and handing callers data that was never attached.)
+            if (merge)
+            {
+                return result ?? new List<SolarFaceSimulationResult>();
+            }
+
             return solarFaceSimulationResults;
         }
 
